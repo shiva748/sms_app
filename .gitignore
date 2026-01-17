@@ -1,0 +1,63 @@
+# =========================
+# Node / React
+# =========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Build output
+dist/
+build/
+out/
+.next/
+.vercel/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# =========================
+# Capacitor
+# =========================
+capacitor.config.json
+capacitor.config.yaml
+capacitor.config.ts
+!capacitor.config.ts.example
+
+# Native platforms (DO NOT commit these)
+android/
+ios/
+
+# Capacitor generated files
+www/
+public/
+
+# =========================
+# IDEs / Editors
+# =========================
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-workspace
+*.sublime-project
+
+# =========================
+# OS files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Logs & misc
+# =========================
+logs/
+*.log
+coverage/
+*.tsbuildinfo

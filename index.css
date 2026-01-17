@@ -1,0 +1,23 @@
+/* ===== Completely hide scrollbar (but keep scrolling) ===== */
+
+/* Chrome, Safari, Edge, Android WebView */
+::-webkit-scrollbar {
+  display: none;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none; /* IE/Edge legacy */
+}
+
+/* Ensure smooth scrolling still works */
+html, body {
+  overflow-y: auto;
+}
+
+* {
+  -webkit-user-select: none; /* Safari */
+  -ms-user-select: none; /* IE 10 and IE 11 */
+  user-select: none; /* Standard syntax */
+}
