@@ -1,9 +1,15 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Dialog } from "@capacitor/dialog";
 import { 
   School, BookOpen, Users, ArrowRight, ChevronLeft,
   Book, PenTool, GraduationCap, Calculator, Ruler, Globe, Microscope, Backpack, Library, Briefcase
 } from 'lucide-react';
+import { Toast } from '@capacitor/toast';   // optional, but nice UX
+import { useAppDispatch } from '../../store/hooks';
+import { logout } from '../../store/slices/authSlice';
+import { API_BASE_URL as API } from '../config/api';
+import { LogoutModal } from '../ui/LogoutModal';
 
 // Background Icons Configuration (Same as others for consistency)
 const bgIcons = [
@@ -51,7 +57,36 @@ const RoleCard: React.FC<RoleCardProps> = ({ icon, title, description, onClick, 
 );
 
 export const RoleSelection: React.FC = () => {
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+const handleLogoutConfirm = () => {
+    setShowLogoutModal(false);
+    handleLogout()
+  };
+const handleLogout = async () => {
+  try {
+    await fetch(`${API}/auth/logout`, {
+      method: "GET",
+      credentials: "include",
+    });
+
+    dispatch(logout()); // clear redux state
+
+    await Toast.show({
+      text: "Logged out",
+      duration: "short",
+      position: "bottom",
+    });
+
+    navigate('/login'); // go to Entry screen
+
+  } catch (error) {
+    dispatch(logout());
+    console.error("Logout failed:", error);
+    navigate('/login'); // still go back even if API fails
+  }
+};
 
   // Handle body background color
   useEffect(() => {
@@ -62,14 +97,20 @@ export const RoleSelection: React.FC = () => {
   }, []);
 
   const handleRoleSelect = (role: string) => {
-    console.log(`Selected Role: ${role}`);
-    // Navigate to dashboard with state if needed, or just standard navigation
-    navigate('/dashboard');
+    if(role === "head"){
+      navigate("/head/select-profile");
+    }else if(role === "teacher"){
+      navigate("/teacher/select-profile")
+    }
   };
 
   return (
     <div className="fixed inset-0 w-screen h-[100dvh] flex flex-col bg-[#0a0e17] overflow-hidden font-sans">
-      
+      <LogoutModal 
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={handleLogoutConfirm}
+      />
       {/* Animation Styles */}
       <style>
         {`
@@ -107,7 +148,7 @@ export const RoleSelection: React.FC = () => {
       {/* Navigation Bar */}
       <div className="absolute top-8 left-4 z-50 p-2 flex justify-between items-center max-w-md mx-auto w-full">
         <button 
-          onClick={() => navigate(-1)}
+          onClick={() => setShowLogoutModal(true)}
           className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-full transition-all"
         >
           <ChevronLeft className="w-6 h-6" />

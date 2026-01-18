@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { API_BASE_URL as API } from '../config/api';
-import { 
+import {
   Mail, Lock, Eye, EyeOff, ArrowRight, ChevronLeft,
   Book, PenTool, GraduationCap, Calculator, Ruler, Globe, Microscope, Backpack, Library
 } from 'lucide-react';
@@ -9,6 +9,8 @@ import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
 import { StudentAvatar } from '../ui/StudentAvatar';
 import { Toast } from '@capacitor/toast';
+import { useAppDispatch } from '../../store/hooks';
+import { setAuthenticated, setUser } from '../../store/slices/authSlice';
 
 // Background Icons Configuration
 const bgIcons = [
@@ -24,6 +26,7 @@ const bgIcons = [
 ];
 
 export const Login: React.FC = () => {
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -55,6 +58,8 @@ export const Login: React.FC = () => {
     // Password validation
     if (!formData.password) {
       newErrors.password = "Password is required";
+    } else if (formData.password.length < 8) {
+      newErrors.password = "Password to small";
     }
 
     setErrors(newErrors);
@@ -64,7 +69,7 @@ export const Login: React.FC = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    
+
     // Clear specific error when typing
     if (errors[name]) {
       setErrors(prev => {
@@ -77,44 +82,52 @@ export const Login: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
-    setLoading(prev => ({isLoading: true}));
+    setLoading({ isLoading: true });
     try {
-      let res = await fetch(`${API}/auth/login`,{
-        method:"POST",
+      let res = await fetch(`${API}/auth/login`, {
+        method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body:JSON.stringify(formData),
+        body: JSON.stringify(formData),
       })
       let data = await res.json();
-      if(data.success){
+      if (data.success) {
+        let profileReq = await fetch(`${API}/user/me`, {
+          method: "GET",
+          credentials: "include",
+        })
+        let profileData = await profileReq.json();
         await Toast.show({
-            text: "Login Successfull",
-            duration: "short",
-            position: "bottom",
-          });
-        navigate('/role-selection');
-      }else{
+          text: "Login Successfull",
+          duration: "short",
+          position: "bottom",
+        });
+        alert(JSON.stringify(profileData.data))
+        dispatch(setAuthenticated(true));
+        dispatch(setUser(profileData.data));
+        navigate('/', { replace: true });
+      } else {
         await Toast.show({
-            text: data.message,
-            duration: "short",
-            position: "bottom",
-          });
+          text: data.message,
+          duration: "short",
+          position: "bottom",
+        });
       }
     } catch (error) {
       alert(error)
     }
-    setLoading(prev => ({ ...prev, isLoading: false, isAuthenticated: true }));
-    
+    setLoading({ isLoading: false });
+
   };
 
   return (
     // Fixed inset-0 ensures full viewport height handling
     // overflow-hidden prevents the outer container from scrolling, enforcing the internal scroll
     <div className="fixed inset-0 w-screen h-[100dvh] flex flex-col bg-[#0a0e17] font-sans overflow-hidden">
-      
+
       {/* CSS for floating animation */}
       <style>
         {`
@@ -154,7 +167,7 @@ export const Login: React.FC = () => {
 
       {/* Back Button */}
       <div className="absolute top-8 left-4 z-50">
-        <button 
+        <button
           onClick={() => navigate('/')}
           className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-full transition-all"
         >
@@ -165,13 +178,13 @@ export const Login: React.FC = () => {
       {/* Main Content Scrollable Container */}
       <div className="flex-1 w-full overflow-y-auto overflow-x-hidden flex flex-col relative z-10">
         <div className="w-full max-w-[320px] xs:max-w-[360px] sm:max-w-md flex flex-col items-center m-auto p-3 xs:p-4 sm:p-6 pb-8">
-          
+
           {/* Header Section */}
           <div className="text-center mb-4 sm:mb-8 w-full mt-2">
             <h3 className="text-[10px] sm:text-xs font-bold tracking-[0.2em] text-slate-500 uppercase mb-2 sm:mb-4">Student Portal</h3>
-            
-            <StudentAvatar 
-              emailLength={formData.email.length} 
+
+            <StudentAvatar
+              emailLength={formData.email.length}
               isPasswordFocused={isPasswordFocused}
               isEmailFocused={isEmailFocused}
             />
@@ -232,9 +245,9 @@ export const Login: React.FC = () => {
                 </a>
               </div>
 
-              <Button 
-                type="submit" 
-                fullWidth 
+              <Button
+                type="submit"
+                fullWidth
                 isLoading={loading.isLoading}
                 className="h-10 sm:h-12 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 border-none shadow-lg shadow-indigo-500/25 text-white font-semibold text-xs xs:text-sm sm:text-base rounded-xl transition-all duration-300 hover:scale-[1.02]"
               >
@@ -266,11 +279,11 @@ export const Login: React.FC = () => {
                   <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                 </svg>
               </button>
-              
+
               {/* Apple Button */}
               <button className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black hover:bg-slate-900 flex items-center justify-center transition-colors border border-transparent shadow-md">
                 <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.74 1.18 0 2.45-1.62 4.37-1.54 1.77.08 2.6.76 3.16 1.48-2.66 1.34-2.14 5.39.46 6.55-.54 1.73-1.38 3.55-3.07 5.74zm-2.19-14.7c.6-1.54 2.58-2.43 2.52-4.48-2.06.1-4.04 1.25-4.52 2.87-.43 1.48 1.4 4.54 2 1.61z"/>
+                  <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.74 1.18 0 2.45-1.62 4.37-1.54 1.77.08 2.6.76 3.16 1.48-2.66 1.34-2.14 5.39.46 6.55-.54 1.73-1.38 3.55-3.07 5.74zm-2.19-14.7c.6-1.54 2.58-2.43 2.52-4.48-2.06.1-4.04 1.25-4.52 2.87-.43 1.48 1.4 4.54 2 1.61z" />
                 </svg>
               </button>
             </div>
