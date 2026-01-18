@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { API_BASE_URL as API } from '../config/api';
 import { 
   Mail, Lock, Eye, EyeOff, ArrowRight, ChevronLeft,
   Book, PenTool, GraduationCap, Calculator, Ruler, Globe, Microscope, Backpack, Library
@@ -7,6 +8,7 @@ import {
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
 import { StudentAvatar } from '../ui/StudentAvatar';
+import { Toast } from '@capacitor/toast';
 
 // Background Icons Configuration
 const bgIcons = [
@@ -28,11 +30,8 @@ export const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
   const [isEmailFocused, setIsEmailFocused] = useState(false);
-  const [auth, setAuth] = useState({
-    user: null,
-    isAuthenticated: false,
+  const [loading, setLoading] = useState({
     isLoading: false,
-    error: null,
   });
 
   // Handle body background color to prevent white bars during mobile scroll/overscroll
@@ -81,14 +80,34 @@ export const Login: React.FC = () => {
     
     if (!validateForm()) return;
 
-    setAuth(prev => ({ ...prev, isLoading: true, error: null }));
-
-    setTimeout(() => {
-      // Simulate successful login
-      setAuth(prev => ({ ...prev, isLoading: false, isAuthenticated: true }));
-      console.log("Login Successful");
-      navigate('/role-selection');
-    }, 1500);
+    setLoading(prev => ({isLoading: true}));
+    try {
+      let res = await fetch(`${API}/auth/login`,{
+        method:"POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body:JSON.stringify(formData),
+      })
+      let data = await res.json();
+      if(data.success){
+        await Toast.show({
+            text: "Login Successfull",
+            duration: "short",
+            position: "bottom",
+          });
+        navigate('/role-selection');
+      }else{
+        await Toast.show({
+            text: data.message,
+            duration: "short",
+            position: "bottom",
+          });
+      }
+    } catch (error) {
+      alert(error)
+    }
+    setLoading(prev => ({ ...prev, isLoading: false, isAuthenticated: true }));
+    
   };
 
   return (
@@ -216,12 +235,12 @@ export const Login: React.FC = () => {
               <Button 
                 type="submit" 
                 fullWidth 
-                isLoading={auth.isLoading}
+                isLoading={loading.isLoading}
                 className="h-10 sm:h-12 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 border-none shadow-lg shadow-indigo-500/25 text-white font-semibold text-xs xs:text-sm sm:text-base rounded-xl transition-all duration-300 hover:scale-[1.02]"
               >
                 <span className="flex items-center gap-2">
-                  {auth.isLoading ? 'Authenticating...' : 'Sign In'}
-                  {!auth.isLoading && <ArrowRight className="w-4 h-4" />}
+                  {loading.isLoading ? 'Authenticating...' : 'Sign In'}
+                  {!loading.isLoading && <ArrowRight className="w-4 h-4" />}
                 </span>
               </Button>
             </form>
