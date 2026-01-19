@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { useAppSelector } from '../../store/hooks';
+import { API_BASE_URL } from '../config/api';
 
 // Background Icons
 const bgIcons = [
@@ -136,9 +137,8 @@ export const HeadProfileSelection: React.FC = () => {
                       flex items-center justify-center text-white font-bold text-xl shadow-lg
                       group-hover:shadow-indigo-500/20 transition-shadow
                     `}>
-                      {initial}
+                      {profile.school.logo?<img src={`${API_BASE_URL}/files/${profile.school.logo}`}/>:initial}
                     </div>
-
                     {/* Center: Details */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-0.5">
