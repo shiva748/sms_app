@@ -146,7 +146,7 @@ const handleLogout = async () => {
       </div>
 
       {/* Navigation Bar */}
-      <div className="absolute top-8 left-4 z-50 p-2 flex justify-between items-center max-w-md mx-auto w-full">
+      <div className="absolute top-9 left-2 z-50 p-2 flex justify-between items-center max-w mx-auto w-full">
         <button 
           onClick={() => setShowLogoutModal(true)}
           className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-full transition-all"
@@ -156,7 +156,6 @@ const handleLogout = async () => {
         <div className="text-slate-500 text-xs font-bold tracking-widest uppercase">Select Profile</div>
         <div className="w-10" /> {/* Spacer for centering */}
       </div>
-
       {/* Main Content */}
       <div className="w-full h-full overflow-y-auto overflow-x-hidden flex flex-col relative z-10">
         <div className="w-full max-w-md flex flex-col m-auto p-6 py-20">

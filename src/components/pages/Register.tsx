@@ -161,7 +161,7 @@ export const Register: React.FC = () => {
       </div>
 
       {/* Back Button */}
-      <div className="absolute top-8 left-4 z-50">
+      <div className="absolute top-9 left-2 z-50 p-2 flex justify-between items-center max-w-md mx-auto w-full">
         <button
           onClick={() => navigate('/')}
           className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-full transition-all"

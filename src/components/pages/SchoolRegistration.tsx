@@ -287,7 +287,7 @@ export const SchoolRegistration: React.FC = () => {
       </div>
 
       {/* Header Section (Flex Item) */}
-      <div className="flex-none top-6 z-50 w-full bg-[#0a0e17]/80 backdrop-blur-xl border-b border-white/5 shadow-lg shadow-black/10">
+      <div className="flex-none z-50 w-full bg-[#0a0e17]/80 backdrop-blur-xl border-b border-white/5 shadow-lg shadow-black/10">
         <div className="w-full max-w-xl mx-auto px-4 pb-4 pt-[calc(1rem+env(safe-area-inset-top))] flex items-center">
           <button
             onClick={() => navigate(-1)}
