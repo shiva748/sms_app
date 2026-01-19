@@ -1,12 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  School, Mail, Phone, MapPin, Building, Calendar, 
+import {
+  School, Mail, Phone, MapPin, Building, Calendar,
   Upload, X, Check, ArrowRight, ChevronLeft, Image as ImageIcon,
   Book, PenTool, GraduationCap, Calculator, Ruler, Globe, Microscope, Backpack, Library, ChevronDown
 } from 'lucide-react';
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
+import { API_BASE_URL as API } from '../config/api';
+import { Toast } from '@capacitor/toast';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { setUser } from '../..//store/slices/authSlice';
 
 // Background Icons (Consistent with other auth screens)
 const bgIcons = [
@@ -49,8 +53,8 @@ const SelectInput: React.FC<SelectProps> = ({ label, icon, options, error, class
             disabled:opacity-50 disabled:cursor-not-allowed
             ${icon ? 'pl-10' : ''}
             bg-[#1e293b]/50 text-white placeholder-slate-500 hover:border-slate-600
-            ${error 
-              ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' 
+            ${error
+              ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20'
               : 'border-slate-700 focus:border-indigo-500 focus:ring-indigo-500/20'}
             ${className}
           `}
@@ -77,9 +81,11 @@ const SelectInput: React.FC<SelectProps> = ({ label, icon, options, error, class
 };
 
 export const SchoolRegistration: React.FC = () => {
+  const {user}= useAppSelector((state)=> state.auth)
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   const [isLoading, setIsLoading] = useState(false);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -107,7 +113,7 @@ export const SchoolRegistration: React.FC = () => {
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-    
+
     // Logo Validation
     if (!formData.logo) {
       newErrors.logo = "School logo is required";
@@ -115,20 +121,20 @@ export const SchoolRegistration: React.FC = () => {
 
     // Basic Info Validation
     if (!formData.name.trim()) newErrors.name = "School name is required";
-    
+
     // Email Validation
     if (!formData.email.trim()) {
-        newErrors.email = "Email is required";
+      newErrors.email = "Email is required";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-        newErrors.email = "Invalid email format";
+      newErrors.email = "Invalid email format";
     }
 
     // Phone Validation (Indian number: 10 digits starting with 6-9)
     const phoneRegex = /^[6-9]\d{9}$/;
     if (!formData.phone.trim()) {
-        newErrors.phone = "Phone number is required";
+      newErrors.phone = "Phone number is required";
     } else if (!phoneRegex.test(formData.phone)) {
-        newErrors.phone = "Enter valid 10-digit Indian mobile (e.g., 9876543210)";
+      newErrors.phone = "Enter valid 10-digit Indian mobile (e.g., 9876543210)";
     }
 
     // Address Validation
@@ -146,16 +152,16 @@ export const SchoolRegistration: React.FC = () => {
     // Academic Validation
     if (!formData.board) newErrors.board = "Please select a board";
     if (!formData.medium) newErrors.medium = "Please select a medium";
-    
+
     // Year Validation
     if (!formData.establishedYear) {
       newErrors.establishedYear = "Year is required";
     } else {
-        const year = parseInt(formData.establishedYear);
-        const currentYear = new Date().getFullYear();
-        if (isNaN(year) || year < 1800 || year > currentYear) {
-            newErrors.establishedYear = `Enter valid year (1800-${currentYear})`;
-        }
+      const year = parseInt(formData.establishedYear);
+      const currentYear = new Date().getFullYear();
+      if (isNaN(year) || year < 1800 || year > currentYear) {
+        newErrors.establishedYear = `Enter valid year (1800-${currentYear})`;
+      }
     }
 
     setErrors(newErrors);
@@ -165,14 +171,14 @@ export const SchoolRegistration: React.FC = () => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    
+
     // Clear error for the field being edited
     if (errors[name]) {
-        setErrors(prev => {
-            const newErrors = { ...prev };
-            delete newErrors[name];
-            return newErrors;
-        });
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
     }
   };
 
@@ -182,7 +188,7 @@ export const SchoolRegistration: React.FC = () => {
       setFormData(prev => ({ ...prev, logo: file }));
       const objectUrl = URL.createObjectURL(file);
       setLogoPreview(objectUrl);
-      
+
       // Clear logo error
       if (errors.logo) {
         setErrors(prev => {
@@ -203,29 +209,49 @@ export const SchoolRegistration: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!validateForm()) {
-        // Scroll to top or first error if needed, for now just block submit
-        return;
+      return;
     }
-
     setIsLoading(true);
-
-    // Simulate API Call
-    setTimeout(() => {
-      console.log("School Registration Payload:", {
-        ...formData,
-        logo: formData.logo ? formData.logo.name : 'No logo uploaded'
-      });
-      alert("School Registration Submitted Successfully!");
-      setIsLoading(false);
-      navigate('/login');
-    }, 2000);
+    try {
+      const formdata = new FormData();
+      formdata.append("logo", formData.logo);
+      formdata.append("data", JSON.stringify({ ...formData, logo: null }));
+      const req = await fetch(`${API}/schools/register`, {
+        method: "POST",
+        credentials: "include",
+        body: formdata,
+      })
+      const res = await req.json();
+      if (res.success) {
+        await Toast.show({
+          text: res.message,
+          duration: "short",
+          position: "bottom",
+        });
+        dispatch(setUser({...user, schoolHeads:[...user.schoolHeads, res.data]}));
+        navigate("/head/select-profile")
+      } else {
+        await Toast.show({
+          text: res.message,
+          duration: "short",
+          position: "bottom",
+        });
+      }
+    } catch (error) {
+      console.log(error);
+       await Toast.show({
+          text: error.message,
+          duration: "short",
+          position: "bottom",
+        });
+    }
+    setIsLoading(false);
   };
 
   return (
     <div className="fixed inset-0 w-screen h-[100dvh] flex flex-col bg-[#0a0e17] font-sans">
-      
+
       {/* Animations */}
       <style>
         {`
@@ -240,7 +266,7 @@ export const SchoolRegistration: React.FC = () => {
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-indigo-900/20 rounded-full blur-[100px]" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-900/20 rounded-full blur-[100px]" />
-        
+
         {bgIcons.map((item, index) => (
           <div
             key={index}
@@ -261,17 +287,17 @@ export const SchoolRegistration: React.FC = () => {
       </div>
 
       {/* Header Section (Flex Item) */}
-      <div className="flex-none z-50 w-full bg-[#0a0e17]/80 backdrop-blur-xl border-b border-white/5 shadow-lg shadow-black/10">
+      <div className="flex-none top-6 z-50 w-full bg-[#0a0e17]/80 backdrop-blur-xl border-b border-white/5 shadow-lg shadow-black/10">
         <div className="w-full max-w-xl mx-auto px-4 pb-4 pt-[calc(1rem+env(safe-area-inset-top))] flex items-center">
-          <button 
+          <button
             onClick={() => navigate(-1)}
             className="p-2 -ml-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-full transition-all"
           >
             <ChevronLeft className="w-6 h-6" />
           </button>
           <div className="ml-2">
-             <h1 className="text-white font-bold text-lg leading-none">Register School</h1>
-             <p className="text-slate-500 text-xs">Create new institution profile</p>
+            <h1 className="text-white font-bold text-lg leading-none">Register School</h1>
+            <p className="text-slate-500 text-xs">Create new institution profile</p>
           </div>
         </div>
       </div>
@@ -279,15 +305,15 @@ export const SchoolRegistration: React.FC = () => {
       {/* Main Content (Flex Scrollable Area) */}
       <div className="flex-1 w-full overflow-y-auto overflow-x-hidden relative z-10 scroll-smooth">
         <div className="w-full max-w-xl mx-auto px-4 py-6 sm:py-8 pb-12">
-          
+
           <form onSubmit={handleSubmit} className="w-full bg-[#131620]/80 border border-slate-800/60 rounded-2xl p-5 sm:p-8 shadow-2xl backdrop-blur-md space-y-6" noValidate>
-            
+
             {/* Logo Upload Section */}
             <div>
               <label className={`block text-[10px] xs:text-xs font-bold uppercase tracking-wider mb-2 ${errors.logo ? 'text-red-500' : 'text-slate-400'}`}>
                 School Logo
               </label>
-              <div 
+              <div
                 onClick={() => fileInputRef.current?.click()}
                 className={`
                   w-full h-32 border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all relative overflow-hidden group
@@ -297,7 +323,7 @@ export const SchoolRegistration: React.FC = () => {
                 {logoPreview ? (
                   <>
                     <img src={logoPreview} alt="Logo Preview" className="h-full w-full object-contain p-4" />
-                    <button 
+                    <button
                       onClick={removeLogo}
                       className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg z-10"
                     >
@@ -315,10 +341,10 @@ export const SchoolRegistration: React.FC = () => {
                     <p className="text-[10px] text-slate-600 mt-1">PNG, JPG up to 5MB</p>
                   </>
                 )}
-                <input 
-                  type="file" 
-                  ref={fileInputRef} 
-                  className="hidden" 
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  className="hidden"
                   accept="image/*"
                   onChange={handleFileChange}
                 />
@@ -439,7 +465,7 @@ export const SchoolRegistration: React.FC = () => {
                   icon={<Building className="w-4 h-4" />}
                   error={errors.board}
                 />
-                
+
                 <SelectInput
                   label="Medium"
                   name="medium"
@@ -450,7 +476,7 @@ export const SchoolRegistration: React.FC = () => {
                   error={errors.medium}
                 />
               </div>
-              
+
               <Input
                 variant="dark"
                 label="Established Year"
@@ -466,9 +492,9 @@ export const SchoolRegistration: React.FC = () => {
 
             {/* Submit Action */}
             <div className="pt-4">
-              <Button 
-                type="submit" 
-                fullWidth 
+              <Button
+                type="submit"
+                fullWidth
                 isLoading={isLoading}
                 className="h-12 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 border-none shadow-lg shadow-indigo-500/25 text-white font-bold text-sm rounded-xl transition-all duration-300 hover:scale-[1.02]"
               >

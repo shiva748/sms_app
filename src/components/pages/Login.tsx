@@ -105,7 +105,6 @@ export const Login: React.FC = () => {
           duration: "short",
           position: "bottom",
         });
-        alert(JSON.stringify(profileData.data))
         dispatch(setAuthenticated(true));
         dispatch(setUser(profileData.data));
         navigate('/', { replace: true });
@@ -181,7 +180,7 @@ export const Login: React.FC = () => {
 
           {/* Header Section */}
           <div className="text-center mb-4 sm:mb-8 w-full mt-2">
-            <h3 className="text-[10px] sm:text-xs font-bold tracking-[0.2em] text-slate-500 uppercase mb-2 sm:mb-4">Student Portal</h3>
+            <h3 className="text-[10px] sm:text-xs font-bold tracking-[0.2em] text-slate-500 uppercase mb-2 sm:mb-4">School Connect</h3>
 
             <StudentAvatar
               emailLength={formData.email.length}
@@ -199,10 +198,10 @@ export const Login: React.FC = () => {
               <div>
                 <Input
                   variant="dark"
-                  label="Academic Email"
+                  label="Email"
                   name="email"
                   type="email"
-                  placeholder="student@school.edu"
+                  placeholder="Type your email here"
                   value={formData.email}
                   onChange={handleChange}
                   onFocus={() => setIsEmailFocused(true)}

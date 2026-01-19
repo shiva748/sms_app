@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { 
+import {
   User, Mail, Phone, Lock, Eye, EyeOff, ArrowRight, ChevronLeft,
   Book, PenTool, GraduationCap, Calculator, Ruler, Globe, Microscope, Backpack, Library
 } from 'lucide-react';
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
+import { Toast } from '@capacitor/toast';
+import { API_BASE_URL as API } from '../config/api';
 
 // Reuse the same background configuration for consistency
 const bgIcons = [
@@ -28,7 +30,7 @@ export const Register: React.FC = () => {
     phone: '',
     password: ''
   });
-  
+
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -49,24 +51,24 @@ export const Register: React.FC = () => {
 
     // Email Validation
     if (!formData.email.trim()) {
-        newErrors.email = "Email is required";
+      newErrors.email = "Email is required";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-        newErrors.email = "Invalid email format";
+      newErrors.email = "Invalid email format";
     }
 
     // Phone Validation (Indian number)
     const phoneRegex = /^[6-9]\d{9}$/;
     if (!formData.phone.trim()) {
-        newErrors.phone = "Phone number is required";
+      newErrors.phone = "Phone number is required";
     } else if (!phoneRegex.test(formData.phone)) {
-        newErrors.phone = "Enter valid 10-digit Indian mobile";
+      newErrors.phone = "Enter valid 10-digit Indian mobile";
     }
 
     // Password Validation
     if (!formData.password) {
-        newErrors.password = "Password is required";
+      newErrors.password = "Password is required";
     } else if (formData.password.length < 6) {
-        newErrors.password = "Password must be at least 6 characters";
+      newErrors.password = "Password must be at least 6 characters";
     }
 
     setErrors(newErrors);
@@ -76,7 +78,7 @@ export const Register: React.FC = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    
+
     // Clear specific error when typing
     if (errors[name]) {
       setErrors(prev => {
@@ -89,29 +91,41 @@ export const Register: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
     setIsLoading(true);
-
-    // Simulate API delay
-    setTimeout(() => {
-        const payload = {
-            name: formData.name,
-            email: formData.email,
-            phone: formData.phone,
-            password: formData.password
-        };
-        console.log("Registration Payload:", JSON.stringify(payload, null, 2));
-        alert("Registration Successful! Check console for payload.");
-        setIsLoading(false);
-        navigate('/login');
-    }, 1500);
+    try {
+      let res = await fetch(`${API}/auth/register`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      })
+      let data = await res.json();
+      if (data.success) {
+        await Toast.show({
+          text: data.message,
+          duration: "short",
+          position: "bottom",
+        });
+        navigate('/login', { replace: true });
+      } else {
+        await Toast.show({
+          text: data.message,
+          duration: "short",
+          position: "bottom",
+        });
+      }
+    } catch (error) {
+      alert(error)
+    }
+    setIsLoading(false);
   };
 
   return (
     <div className="fixed inset-0 w-screen h-[100dvh] flex flex-col bg-[#0a0e17] font-sans overflow-hidden">
-      
+
       <style>
         {`
           @keyframes float {
@@ -148,7 +162,7 @@ export const Register: React.FC = () => {
 
       {/* Back Button */}
       <div className="absolute top-8 left-4 z-50">
-        <button 
+        <button
           onClick={() => navigate('/')}
           className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-full transition-all"
         >
@@ -159,10 +173,8 @@ export const Register: React.FC = () => {
       {/* Scrollable Container */}
       <div className="flex-1 w-full overflow-y-auto overflow-x-hidden flex flex-col relative z-10">
         <div className="w-full max-w-[320px] xs:max-w-[360px] sm:max-w-md flex flex-col items-center m-auto p-3 xs:p-4 sm:p-6 pb-8">
-          
+
           <div className="text-center mb-4 sm:mb-6 w-full mt-2">
-            <h3 className="text-[10px] sm:text-xs font-bold tracking-[0.2em] text-slate-500 uppercase mb-2 sm:mb-4">Student Enrollment</h3>
-            
             <h1 className="text-xl xs:text-2xl sm:text-3xl font-bold text-white mb-1">Create Account</h1>
             <p className="text-xs xs:text-sm text-slate-400">Join EduSphere Today</p>
           </div>
@@ -174,7 +186,7 @@ export const Register: React.FC = () => {
                 label="Full Name"
                 name="name"
                 type="text"
-                placeholder="Shiva Gautam"
+                placeholder="Enter your full name"
                 value={formData.name}
                 onChange={handleChange}
                 icon={<User className="w-4 h-4 sm:w-5 sm:h-5" />}
@@ -187,7 +199,7 @@ export const Register: React.FC = () => {
                 label="Email Address"
                 name="email"
                 type="email"
-                placeholder="shivagautam2002@gmail.com"
+                placeholder="Type your email here"
                 value={formData.email}
                 onChange={handleChange}
                 icon={<Mail className="w-4 h-4 sm:w-5 sm:h-5" />}
@@ -200,7 +212,7 @@ export const Register: React.FC = () => {
                 label="Phone Number"
                 name="phone"
                 type="tel"
-                placeholder="9456878882"
+                placeholder="10-digit mobile number"
                 value={formData.phone}
                 onChange={handleChange}
                 icon={<Phone className="w-4 h-4 sm:w-5 sm:h-5" />}
@@ -230,9 +242,9 @@ export const Register: React.FC = () => {
                 required
               />
 
-              <Button 
-                type="submit" 
-                fullWidth 
+              <Button
+                type="submit"
+                fullWidth
                 isLoading={isLoading}
                 className="mt-2 h-10 sm:h-12 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 border-none shadow-lg shadow-indigo-500/25 text-white font-semibold text-xs xs:text-sm sm:text-base rounded-xl transition-all duration-300 hover:scale-[1.02]"
               >

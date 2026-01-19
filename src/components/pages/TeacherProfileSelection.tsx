@@ -21,80 +21,6 @@ const bgIcons = [
   { Icon: Library, bottom: '40%', left: '85%', size: 38, delay: '3s', duration: '17s', rot: '0deg' }
 ];
 
-// Mock Data Structure matching the provided JSON
-const demoProfiles = [
-  {
-    "id": 1,
-    "user": {
-        "id": 2,
-        "name": "Richa Gautam",
-        "email": "richagautam2003@gmail.com",
-        "phone": "8126008074",
-        "status": "ACTIVE"
-    },
-    "school": {
-        "id": 101,
-        "name": "Green Valley Public School",
-        "email": "contact@greenvalleyschool.edu",
-        "phone": "9876543210",
-        "logo": "6d154c07-a5a1-46e6-84a5-ea361a131bd5.png",
-        "address": "123 MG Road, Near City Park",
-        "city": "Bengaluru",
-        "state": "Karnataka",
-        "pincode": "560001",
-        "board": "CBSE",
-        "medium": "English",
-        "establishedYear": 1998,
-        "status": "ACTIVE",
-        "createdAt": "2026-01-16T07:09:10.545803",
-        "updatedAt": "2026-01-16T07:09:10.545803",
-        "hibernateLazyInitializer": {}
-    },
-    "employeeCode": "EMP-2024-001",
-    "dateOfJoining": "2024-06-01",
-    "qualification": "M.Sc. Mathematics",
-    "experienceYears": 5,
-    "status": "ACTIVE",
-    "createdAt": "2026-01-16T07:18:05.482689",
-    "updatedAt": "2026-01-16T07:19:16.723874"
-  },
-  {
-    "id": 2,
-    "user": {
-        "id": 2,
-        "name": "Richa Gautam",
-        "email": "richagautam2003@gmail.com",
-        "phone": "8126008074",
-        "status": "ACTIVE"
-    },
-    "school": {
-        "id": 102,
-        "name": "St. Mary's High School",
-        "email": "admin@stmarys.edu",
-        "phone": "9876543211",
-        "logo": null,
-        "address": "45 Church Street",
-        "city": "Mumbai",
-        "state": "Maharashtra",
-        "pincode": "400050",
-        "board": "ICSE",
-        "medium": "English",
-        "establishedYear": 1985,
-        "status": "ACTIVE",
-        "createdAt": "2026-01-15T07:09:10.545803",
-        "updatedAt": "2026-01-15T07:09:10.545803",
-        "hibernateLazyInitializer": {}
-    },
-    "employeeCode": null,
-    "dateOfJoining": null,
-    "qualification": null,
-    "experienceYears": null,
-    "status": "PENDING",
-    "createdAt": "2026-01-16T08:18:05.482689",
-    "updatedAt": "2026-01-16T08:19:16.723874"
-  }
-];
-
 // Helper to determine gradient based on index
 const getGradient = (index: number) => {
   const gradients = [
@@ -284,7 +210,7 @@ export const TeacherProfileSelection: React.FC = () => {
               onClick={() => alert("Feature: 'Join School with Code' coming soon.")}
               className={`
                 h-12 border-dashed border-slate-700 text-slate-400 hover:text-white hover:bg-white/5 hover:border-slate-500 rounded-xl group
-                ${demoProfiles.length === 0 ? 'bg-indigo-600/10 border-indigo-500/50 text-indigo-300 hover:bg-indigo-600/20 hover:border-indigo-400 hover:text-indigo-200' : ''}
+                ${user.teachers.length === 0 ? 'bg-indigo-600/10 border-indigo-500/50 text-indigo-300 hover:bg-indigo-600/20 hover:border-indigo-400 hover:text-indigo-200' : ''}
               `}
             >
               <Plus className="w-4 h-4 mr-2 group-hover:rotate-90 transition-transform" />
