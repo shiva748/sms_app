@@ -9,13 +9,25 @@ import { SchoolRegistration } from './src/components/pages/SchoolRegistration';
 import { useAppSelector, useAppDispatch } from "./src/store/hooks";
 import { store } from "./src/store/store";
 import { syncAuthFromStorageToRedux, autoPersistAuthState } from "./src/services/preferences";
-import { logout, setAuthenticated, setUser } from "./src/store/slices/authSlice";
+import { logout, setAuthenticated, setSchool, setUser } from "./src/store/slices/authSlice";
 import { API_BASE_URL as API } from "./src/components/config/api";
 import { LoadingScreen } from "./src/components/ui/LoadingScreen";
 import { HeadProfileSelection } from "./src/components/pages/HeadProfileSelection";
 import { TeacherProfileSelection } from "./src/components/pages/TeacherProfileSelection";
+import { HeadDashboard } from "./src/components/pages/HeadDashboard";
+
 
 const AppLayout: React.FC = () => {
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
+    };
+  }, []);
+
   useAndroidBackButton();
   const dispatch = useAppDispatch();
   const { authenticated: isAuthenticated, role } = useAppSelector(state => state.auth);
@@ -47,6 +59,7 @@ const AppLayout: React.FC = () => {
             const user = await res.json();
             dispatch(setAuthenticated(true));
             dispatch(setUser(user.data));
+            dispatch(setSchool(saved.school));
           }
         }
       } catch (err) {
@@ -89,10 +102,20 @@ const AppLayout: React.FC = () => {
           {/* 👉 HOME SCREEN FOR AUTHENTICATED USER */}
           <Route path="/" element={<RoleSelection />} />
           <Route path="/school-registration" element={<SchoolRegistration />} />
-          <Route path="/head/select-profile" element={<HeadProfileSelection/>}/>
-          <Route path="/teacher/select-profile" element={<TeacherProfileSelection/>}/>
+          <Route path="/head/select-profile" element={<HeadProfileSelection back={"/"} />} />
+          <Route path="/teacher/select-profile" element={<TeacherProfileSelection back={"/"} />} />
           {/* Anything else goes to home (RoleSelection) */}
           <Route path="*" element={<Navigate to="/" replace />} />
+        </>
+      )}
+
+      {isAuthenticated && role && role == "SCHOOL_HEAD" && (
+        <>
+          <Route path="/" element={<HeadDashboard />} />
+          <Route path="/change-role" element={<RoleSelection back={"/"} />} />
+          <Route path="/school-registration" element={<SchoolRegistration />} />
+          <Route path="/head/select-profile" element={<HeadProfileSelection back={"/change-role"} />} />
+          <Route path="/teacher/select-profile" element={<TeacherProfileSelection back={"/change-role"} />} />
         </>
       )}
 

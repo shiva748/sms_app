@@ -1,12 +1,14 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Building2, ChevronLeft, Plus, CheckCircle2, Clock, Ban, ArrowRight, MapPin, 
+import {
+  Building2, ChevronLeft, Plus, CheckCircle2, Clock, Ban, ArrowRight, MapPin,
   Book, PenTool, GraduationCap, Calculator, Ruler, Globe, Microscope, Backpack, Library, School
 } from 'lucide-react';
 import { Button } from '../ui/Button';
-import { useAppSelector } from '../../store/hooks';
+import { useAppSelector, useAppDispatch } from '../../store/hooks';
 import { API_BASE_URL } from '../config/api';
+import { Toast } from '@capacitor/toast';
+import { setRole, setSchool } from '../../store/slices/authSlice';
 
 // Background Icons
 const bgIcons = [
@@ -34,8 +36,9 @@ const getGradient = (index: number) => {
   return gradients[index % gradients.length];
 };
 
-export const HeadProfileSelection: React.FC = () => {
-  const {user} = useAppSelector((state)=> state.auth);
+export const HeadProfileSelection: React.FC = ({ back }) => {
+  const dispatch = useAppDispatch();
+  const { user } = useAppSelector((state) => state.auth);
   const navigate = useNavigate();
 
   // Handle body background color
@@ -46,18 +49,23 @@ export const HeadProfileSelection: React.FC = () => {
     };
   }, []);
 
-  const handleSelectProfile = (profile: any) => {
+  const handleSelectProfile = async (profile: any) => {
     if (profile.status === 'ACTIVE') {
-      console.log("Selected Profile:", profile.school.name);
-      navigate('/dashboard');
+      dispatch(setRole("SCHOOL_HEAD"));
+      dispatch(setSchool(profile.school));
+      navigate('/');
     } else {
-      alert(`Cannot access ${profile.school.name} account. Status: ${profile.status}`);
+      await Toast.show({
+        text: `Cannot access account (${profile.status})`,
+        duration: "short",
+        position: "bottom"
+      })
     }
   };
 
   return (
     <div className="fixed inset-0 w-screen h-[100dvh] flex flex-col bg-[#0a0e17] overflow-hidden font-sans">
-      
+
       {/* Animation Styles */}
       <style>
         {`
@@ -72,7 +80,7 @@ export const HeadProfileSelection: React.FC = () => {
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-indigo-900/20 rounded-full blur-[100px]" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-900/20 rounded-full blur-[100px]" />
-        
+
         {bgIcons.map((item, index) => (
           <div
             key={index}
@@ -94,8 +102,8 @@ export const HeadProfileSelection: React.FC = () => {
 
       {/* Header with Back Button */}
       <div className="absolute top-7 left-0 right-0 p-4 z-50 flex items-center w-full max-w-lg mx-auto">
-        <button 
-          onClick={() => navigate('/role-selection')}
+        <button
+          onClick={() => navigate(back)}
           className="p-2 -ml-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-full transition-all"
         >
           <ChevronLeft className="w-6 h-6" />
@@ -106,7 +114,7 @@ export const HeadProfileSelection: React.FC = () => {
       {/* Main Content */}
       <div className="flex-1 w-full overflow-y-auto overflow-x-hidden flex flex-col relative z-10 pt-16">
         <div className="w-full max-w-lg flex flex-col m-auto p-4 sm:p-6 pb-20">
-          
+
           <div className="mb-6">
             <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">School Head Profiles</h1>
             <p className="text-slate-400 text-sm">Select an organization to manage</p>
@@ -122,7 +130,7 @@ export const HeadProfileSelection: React.FC = () => {
                 const gradient = getGradient(index);
 
                 return (
-                  <div 
+                  <div
                     key={profile.id}
                     onClick={() => handleSelectProfile(profile)}
                     className={`
@@ -132,12 +140,22 @@ export const HeadProfileSelection: React.FC = () => {
                     `}
                   >
                     {/* Left: School Logo/Avatar */}
-                    <div className={`
-                      flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br ${gradient}
-                      flex items-center justify-center text-white font-bold text-xl shadow-lg
-                      group-hover:shadow-indigo-500/20 transition-shadow
-                    `}>
-                      {profile.school.logo?<img src={`${API_BASE_URL}/files/${profile.school.logo}`}/>:initial}
+                    <div
+                      className={`
+    flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br ${gradient}
+    flex items-center justify-center text-white font-bold text-xl shadow-lg
+    group-hover:shadow-indigo-500/20 transition-shadow
+  `}
+                    >
+                      {profile.school.logo ? (
+                        <img
+                          src={`${API_BASE_URL}/files/${profile.school.logo}`}
+                          className="w-12 h-12 object-cover rounded-lg"
+                          alt="school logo"
+                        />
+                      ) : (
+                        initial
+                      )}
                     </div>
                     {/* Center: Details */}
                     <div className="flex-1 min-w-0">
@@ -146,7 +164,7 @@ export const HeadProfileSelection: React.FC = () => {
                           {school.name}
                         </h3>
                       </div>
-                      
+
                       <div className="flex items-center text-slate-400 text-xs mb-2">
                         <MapPin className="w-3 h-3 mr-1" />
                         <span className="truncate">{school.city}, {school.state}</span>
@@ -156,11 +174,11 @@ export const HeadProfileSelection: React.FC = () => {
                         {/* Status Badge */}
                         <div className={`
                           inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border
-                          ${isActive 
-                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+                          ${isActive
+                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
                             : isPending
-                            ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                            : 'bg-red-500/10 text-red-400 border-red-500/20'
+                              ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                              : 'bg-red-500/10 text-red-400 border-red-500/20'
                           }
                         `}>
                           {isActive && <CheckCircle2 className="w-3 h-3 mr-1" />}
@@ -201,8 +219,8 @@ export const HeadProfileSelection: React.FC = () => {
 
           {/* Add New Button */}
           <div className="mt-8">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               fullWidth
               onClick={() => navigate('/school-registration')}
               className={`

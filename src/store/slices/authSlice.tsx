@@ -22,7 +22,7 @@ export type AuthState = {
   authenticated: boolean;
   user: User | null;
   role: "SCHOOL_HEAD" | "TEACHER" | "PARENT" | null;
-  schoolId: number | null;
+  school: any | null;
   token: string | null;
 };
 
@@ -32,7 +32,7 @@ const initialState: AuthState = {
   authenticated: false,
   user: null,
   role: null,
-  schoolId: null,
+  school: null,
   token: null,
 };
 
@@ -50,8 +50,8 @@ const authSlice = createSlice({
       state.role = action.payload;
     },
 
-    setSchool(state, action: PayloadAction<number>) {
-      state.schoolId = action.payload;
+    setSchool(state, action: PayloadAction<any>) {
+      state.school = action.payload;
     },
 
     setToken(state, action: PayloadAction<string>) {
@@ -65,7 +65,7 @@ const authSlice = createSlice({
     logout(state) {
       state.user = null;
       state.role = null;
-      state.schoolId = null;
+      state.school = null;
       state.token = null;
       state.authenticated = false;
     },

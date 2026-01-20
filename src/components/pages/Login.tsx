@@ -99,7 +99,6 @@ export const Login: React.FC = () => {
           method: "GET",
           credentials: "include",
         })
-        alert(profileReq.status)
         let profileData = await profileReq.json();
         await Toast.show({
           text: "Login Successfull",

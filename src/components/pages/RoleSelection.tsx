@@ -56,7 +56,7 @@ const RoleCard: React.FC<RoleCardProps> = ({ icon, title, description, onClick, 
   </button>
 );
 
-export const RoleSelection: React.FC = () => {
+export const RoleSelection: React.FC = ({back}) => {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -148,7 +148,7 @@ const handleLogout = async () => {
       {/* Navigation Bar */}
       <div className="absolute top-9 left-2 z-50 p-2 flex justify-between items-center max-w mx-auto w-full">
         <button 
-          onClick={() => setShowLogoutModal(true)}
+          onClick={() => {back?navigate(back):setShowLogoutModal(true)}}
           className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-full transition-all"
         >
           <ChevronLeft className="w-6 h-6" />

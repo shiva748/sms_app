@@ -33,7 +33,7 @@ const getGradient = (index: number) => {
   return gradients[index % gradients.length];
 };
 
-export const TeacherProfileSelection: React.FC = () => {
+export const TeacherProfileSelection: React.FC = ({back}) => {
   const {user} = useAppSelector((state)=> state.auth);
   const navigate = useNavigate();
 
@@ -94,7 +94,7 @@ export const TeacherProfileSelection: React.FC = () => {
       {/* Header with Back Button */}
       <div className="absolute top-7 left-0 right-0 p-4 z-50 flex items-center w-full max-w-lg mx-auto">
         <button 
-          onClick={() => navigate('/role-selection')}
+          onClick={() => navigate(back)}
           className="p-2 -ml-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-full transition-all"
         >
           <ChevronLeft className="w-6 h-6" />
