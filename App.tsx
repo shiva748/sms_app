@@ -76,7 +76,7 @@ const AppLayout: React.FC = () => {
   // 🔥 LOADING SCREEN WHILE CHECKING AUTH
   if (checkingAuth) {
     return (
-      <LoadingScreen message="Loading" />
+      <LoadingScreen message="Verifying" />
     );
   }
 

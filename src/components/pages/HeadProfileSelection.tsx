@@ -51,6 +51,14 @@ export const HeadProfileSelection: React.FC = ({ back }) => {
 
   const handleSelectProfile = async (profile: any) => {
     if (profile.status === 'ACTIVE') {
+      if (profile.school.status !== 'ACTIVE') {
+        await Toast.show({
+          text: `School is not ACTIVE`,
+          duration: "short",
+          position: "bottom"
+        })
+        return;
+      }
       dispatch(setRole("SCHOOL_HEAD"));
       dispatch(setSchool(profile.school));
       navigate('/');
@@ -126,6 +134,9 @@ export const HeadProfileSelection: React.FC = ({ back }) => {
                 const isActive = profile.status === 'ACTIVE';
                 const isPending = profile.status === 'PENDING';
                 const isInactive = profile.status === 'INACTIVE';
+                const isSchoolActive = profile.school.status === 'ACTIVE';
+                const isSchoolPending = profile.school.status === 'PENDING';
+                const isSchoolInactive = profile.school.status === 'INACTIVE';
                 const initial = school.name ? school.name.charAt(0).toUpperCase() : 'S';
                 const gradient = getGradient(index);
 
@@ -170,27 +181,54 @@ export const HeadProfileSelection: React.FC = ({ back }) => {
                         <span className="truncate">{school.city}, {school.state}</span>
                       </div>
 
-                      <div className="flex items-center gap-2">
-                        {/* Status Badge */}
-                        <div className={`
-                          inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border
-                          ${isActive
-                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                            : isPending
-                              ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                              : 'bg-red-500/10 text-red-400 border-red-500/20'
-                          }
-                        `}>
-                          {isActive && <CheckCircle2 className="w-3 h-3 mr-1" />}
-                          {isPending && <Clock className="w-3 h-3 mr-1" />}
-                          {isInactive && <Ban className="w-3 h-3 mr-1" />}
-                          {profile.status}
-                        </div>
+                      <div className="flex items-center gap-3 text-[10px]">
 
-                        <span className="text-slate-600 text-[10px] border-l border-slate-700 pl-2">
+                        {/* Designation */}
+                        <span className="text-slate-500 pr-2 border-r border-slate-700">
                           {profile.designation}
                         </span>
+
+                        {/* User Status */}
+                        <div
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-semibold uppercase tracking-wide border
+      ${isActive
+                              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                              : isPending
+                                ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                                : 'bg-red-500/10 text-red-400 border-red-500/30'
+                            }
+    `}
+                        >
+                          {isActive && <CheckCircle2 className="w-3 h-3" />}
+                          {isPending && <Clock className="w-3 h-3" />}
+                          {isInactive && <Ban className="w-3 h-3" />}
+                          <span>{profile.status}</span>
+                        </div>
+
+                        {/* Divider Label */}
+                        <span className="text-slate-500 px-2 border-r border-slate-700">
+                          School
+                        </span>
+
+                        {/* School Status */}
+                        <div
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-semibold uppercase tracking-wide border
+      ${isSchoolActive
+                              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                              : isSchoolPending
+                                ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                                : 'bg-red-500/10 text-red-400 border-red-500/30'
+                            }
+    `}
+                        >
+                          {isSchoolActive && <CheckCircle2 className="w-3 h-3" />}
+                          {isSchoolPending && <Clock className="w-3 h-3" />}
+                          {isSchoolInactive && <Ban className="w-3 h-3" />}
+                          <span>{profile.school.status}</span>
+                        </div>
+
                       </div>
+
                     </div>
 
                     {/* Right: Action Arrow */}

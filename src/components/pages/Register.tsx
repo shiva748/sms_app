@@ -96,23 +96,24 @@ export const Register: React.FC = () => {
 
     setIsLoading(true);
     try {
-      let res = await fetch(`${API}/auth/register`, {
+      let req = await fetch(`${API}/auth/register`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       })
-      let data = await res.json();
-      if (data.success) {
+      let res = await req.json();
+      if (res.success) {
         await Toast.show({
-          text: data.message,
+          text: res.message,
           duration: "short",
           position: "bottom",
         });
         navigate('/login', { replace: true });
       } else {
+        setErrors({ ...errors, ...res.data });
         await Toast.show({
-          text: data.message,
+          text: res.message,
           duration: "short",
           position: "bottom",
         });

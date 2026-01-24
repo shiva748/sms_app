@@ -56,7 +56,7 @@ export const syncAuthFromStorageToRedux = async (dispatch: AppDispatch) => {
 
   if (saved.user) dispatch(setUser(saved.user));
   if (saved.role) dispatch(setRole(saved.role));
-  if (saved.schoolId) dispatch(setSchool(saved.schoolId));
+  if (saved.school) dispatch(setSchool(saved.school));
   if (saved.token) dispatch(setToken(saved.token));
   if (saved.authenticated) {
     dispatch(setAuthenticated(true));
@@ -80,7 +80,7 @@ export const autoPersistAuthState = (store: Store<RootState>) => {
         authenticated: nextState.authenticated,
         user: nextState.user,
         role: nextState.role,
-        schoolId: nextState.schoolId,
+        school: nextState.school,
         token: nextState.token,
       });
     }

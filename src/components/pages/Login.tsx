@@ -87,14 +87,14 @@ export const Login: React.FC = () => {
 
     setLoading({ isLoading: true });
     try {
-      let res = await fetch(`${API}/auth/login`, {
+      let req = await fetch(`${API}/auth/login`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       })
-      let data = await res.json();
-      if (data.success) {
+      let res = await req.json();
+      if (res.success) {
         let profileReq = await fetch(`${API}/user/me`, {
           method: "GET",
           credentials: "include",
@@ -109,8 +109,9 @@ export const Login: React.FC = () => {
         dispatch(setUser(profileData.data));
         navigate('/', { replace: true });
       } else {
+        setErrors({ ...errors, ...res.data })
         await Toast.show({
-          text: data.message,
+          text: res.message,
           duration: "short",
           position: "bottom",
         });

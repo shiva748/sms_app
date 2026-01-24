@@ -1,10 +1,13 @@
 import React, { useState, useRef } from 'react';
-import { 
-  User, Calendar, Hash, Image as ImageIcon, Phone, Mail, 
+import {
+  User, Calendar, Hash, Image as ImageIcon, Phone, Mail,
   X, Upload, Save, UserCheck, Smartphone, CheckCircle2
 } from 'lucide-react';
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
+import { API_BASE_URL as API } from '../config/api';
+import { useAppSelector } from '../../store/hooks';
+import { Toast } from '@capacitor/toast';
 
 export interface StudentFormData {
   name: string;
@@ -17,21 +20,21 @@ export interface StudentFormData {
 }
 
 interface StudentAdmissionFormProps {
-  onSubmit: (data: FormData) => void;
+  onSuccess?: () => void;
   onCancel: () => void;
-  isLoading?: boolean;
   initialData?: Partial<StudentFormData>;
 }
 
-export const StudentAdmissionForm: React.FC<StudentAdmissionFormProps> = ({ 
-  onSubmit, 
-  onCancel, 
-  isLoading = false,
-  initialData 
+export const StudentAdmissionForm: React.FC<StudentAdmissionFormProps> = ({
+  onSuccess,
+  onCancel,
+  initialData
 }) => {
+  const { school } = useAppSelector(state => state.auth)
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-  
+  const [isLoading, setIsLoading] = useState(false);
+
   const [formData, setFormData] = useState<StudentFormData>({
     name: initialData?.name || '',
     dateOfBirth: initialData?.dateOfBirth || '',
@@ -50,13 +53,13 @@ export const StudentAdmissionForm: React.FC<StudentAdmissionFormProps> = ({
     // Personal Info Validation
     if (!formData.name.trim()) newErrors.name = "Student name is required";
     if (!formData.photo) newErrors.photo = "Student photo is required";
-    
+
     // Although dateOfBirth is optional in DB entity, it's usually good practice to require it
     if (!formData.dateOfBirth) newErrors.dateOfBirth = "Date of birth is required";
 
     // Contact Validation
     if (!formData.primaryContactName.trim()) newErrors.primaryContactName = "Guardian name is required";
-    
+
     // Phone Validation (10 digits)
     const phoneRegex = /^[6-9]\d{9}$/;
     if (!formData.primaryContactPhone.trim()) {
@@ -93,11 +96,11 @@ export const StudentAdmissionForm: React.FC<StudentAdmissionFormProps> = ({
         setErrors(prev => ({ ...prev, photo: "File size should be less than 5MB" }));
         return;
       }
-      
+
       setFormData(prev => ({ ...prev, photo: file }));
       const objectUrl = URL.createObjectURL(file);
       setPhotoPreview(objectUrl);
-      
+
       if (errors.photo) {
         setErrors(prev => {
           const newErr = { ...prev };
@@ -114,27 +117,60 @@ export const StudentAdmissionForm: React.FC<StudentAdmissionFormProps> = ({
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (validate()) {
+      setIsLoading(true);
+
       // Create FormData object for file upload support
       const submitData = new FormData();
-      submitData.append('name', formData.name);
-      submitData.append('dateOfBirth', formData.dateOfBirth);
-      if (formData.admissionNumber) submitData.append('admissionNumber', formData.admissionNumber);
-      if (formData.photo) submitData.append('photo', formData.photo);
-      submitData.append('primaryContactName', formData.primaryContactName);
-      submitData.append('primaryContactPhone', formData.primaryContactPhone);
-      if (formData.primaryContactEmail) submitData.append('primaryContactEmail', formData.primaryContactEmail);
-      
-      onSubmit(submitData);
+      submitData.append("photo", formData.photo);
+      submitData.append("data", JSON.stringify({ ...formData, photo: null }));
+      try {
+        const req = await fetch(`${API}/schools/${school.id}/students`, {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "X-School-Id": school.id
+          },
+          body: submitData,
+        })
+        const res = await req.json();
+        if (res.success) {
+          onSuccess();
+        } else {
+          await Toast.show({
+            text: res.message,
+            position: "bottom",
+            duration: "short"
+          })
+          setErrors({ ...errors, ...res.data, dateOfBirth: res.dateOfBirth || res.isStudentAgeValid })
+        }
+      } catch (error) {
+        console.error("Admission failed:", error);
+        alert("Failed to admit student. Please try again.");
+      } finally {
+        setIsLoading(false);
+      }
     }
+  };
+  const getMaxDOB = () => {
+    const date = new Date();
+    date.setFullYear(date.getFullYear() - 2);
+    date.setMonth(date.getMonth() - 6);
+    return date.toISOString().split('T')[0];
+  };
+
+  const getMinDOB = () => {
+    const date = new Date();
+    date.setFullYear(date.getFullYear() - 24);  // 24 years
+    return date.toISOString().split('T')[0];
   };
 
   return (
     <form onSubmit={handleSubmit} className="w-full">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        
+
         {/* Left Column: Photo & Personal Basic */}
         <div className="lg:col-span-4 space-y-6">
           {/* Photo Upload Card */}
@@ -142,8 +178,8 @@ export const StudentAdmissionForm: React.FC<StudentAdmissionFormProps> = ({
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">
               Student Photo <span className="text-red-500">*</span>
             </label>
-            
-            <div 
+
+            <div
               onClick={() => fileInputRef.current?.click()}
               className={`
                 aspect-[3/4] w-full border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all relative overflow-hidden group bg-white
@@ -154,7 +190,7 @@ export const StudentAdmissionForm: React.FC<StudentAdmissionFormProps> = ({
                 <>
                   <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <button 
+                    <button
                       type="button"
                       onClick={(e) => { e.stopPropagation(); removePhoto(); }}
                       className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 shadow-lg transform scale-90 group-hover:scale-100 transition-all"
@@ -172,10 +208,10 @@ export const StudentAdmissionForm: React.FC<StudentAdmissionFormProps> = ({
                   <p className="text-[10px] text-slate-400">JPG, PNG up to 5MB</p>
                 </div>
               )}
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                className="hidden" 
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
                 accept="image/*"
                 onChange={handleFileChange}
               />
@@ -186,14 +222,14 @@ export const StudentAdmissionForm: React.FC<StudentAdmissionFormProps> = ({
 
         {/* Right Column: Details Inputs */}
         <div className="lg:col-span-8 space-y-6">
-          
+
           {/* Section: Personal Info */}
           <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
             <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 mb-4 pb-3 border-b border-slate-100">
               <UserCheck className="w-4 h-4 text-indigo-500" />
               Personal Information
             </h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
                 <Input
@@ -207,7 +243,7 @@ export const StudentAdmissionForm: React.FC<StudentAdmissionFormProps> = ({
                   required
                 />
               </div>
-              
+
               <Input
                 label="Date of Birth"
                 name="dateOfBirth"
@@ -216,12 +252,14 @@ export const StudentAdmissionForm: React.FC<StudentAdmissionFormProps> = ({
                 onChange={handleChange}
                 error={errors.dateOfBirth}
                 required
+                min={getMinDOB()}
+                max={getMaxDOB()}
               />
 
               <Input
                 label="Admission Number"
                 name="admissionNumber"
-                placeholder="Auto-generated if empty"
+                placeholder="e.g. sc-1452"
                 value={formData.admissionNumber}
                 onChange={handleChange}
                 icon={<Hash className="w-4 h-4" />}
@@ -289,16 +327,16 @@ export const StudentAdmissionForm: React.FC<StudentAdmissionFormProps> = ({
 
       {/* Footer Actions */}
       <div className="mt-6 pt-4 border-t border-slate-200 flex justify-end gap-3">
-        <Button 
-          type="button" 
-          variant="ghost" 
+        <Button
+          type="button"
+          variant="ghost"
           onClick={onCancel}
           disabled={isLoading}
         >
           Cancel
         </Button>
-        <Button 
-          type="submit" 
+        <Button
+          type="submit"
           isLoading={isLoading}
           className="bg-indigo-600 hover:bg-indigo-700 text-white min-w-[140px]"
         >
