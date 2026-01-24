@@ -3,7 +3,7 @@ import {
   Users, GraduationCap, Banknote, FileBarChart, Plus, Wallet, Calendar,
   ArrowUpRight, ArrowDownRight, MoreVertical, Bell
 } from 'lucide-react';
-import StatCard from "../ui/Statcard";
+import StatCard from "../ui/StatCard";
 import { Button } from '../ui/Button';
 import { Sidebar } from '../ui/Sidebar';
 import { TopBar } from '../ui/TopBar';
