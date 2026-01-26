@@ -57,6 +57,13 @@ const gradeOrderMap = {
 };
 
 export const StudentDirectory: React.FC = () => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
+  const handleLimitChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setItemsPerPage(Number(e.target.value));
+    setCurrentPage(1);
+  };
   const formatGrade = (grade) => {
     return grade
       .toLowerCase()
@@ -86,7 +93,7 @@ export const StudentDirectory: React.FC = () => {
   });
 
   useEffect(() => {
-    handleSearch()
+    handleSearch(true)
   }, []);
 
   const handleTabChange = (tabId: string) => {
@@ -144,18 +151,41 @@ export const StudentDirectory: React.FC = () => {
     handleSearch()
   };
 
-  const handleSearch = async () => {
+  const handleSearch = async (resetPage = false) => {
     setIsSearching(true);
-    const req = await fetch(`${API}/schools/${school.id}/students/search?name=${filters.name}&gradeId=${filters.grade ? `${filters.grade}` : ""}&sectionId=${filters.section ? `${filters.section}` : ""}&status=${filters.status ? `${filters.status}` : ""}`, {
-      method: "GET",
-      credentials: "include",
-      headers: { "X-School-Id": school.id }
-    });
+    const pageToFetch = resetPage ? 1 : currentPage;
+    if (resetPage) setCurrentPage(1);
+    const req = await fetch(
+      `${API}/schools/${school.id}/students/search` +
+      `?page=${pageToFetch}` +
+      `&size=${itemsPerPage}` +
+      `&name=${filters.name}` +
+      `&gradeId=${filters.grade || ""}` +
+      `&sectionId=${filters.section || ""}` +
+      `&status=${filters.status || ""}`,
+      {
+        method: "GET",
+        credentials: "include",
+        headers: { "X-School-Id": school.id }
+      }
+    );
+
     const res = await req.json();
     if (res.success) {
-      setDisplayedStudents(res.data);
+      setDisplayedStudents(res.data.students);
+      setTotalItems(res.data.totalItems);
     }
     setIsSearching(false)
+  };
+  useEffect(() => {
+    handleSearch();
+  }, [currentPage, itemsPerPage]);
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -332,12 +362,28 @@ export const StudentDirectory: React.FC = () => {
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
               <div className="px-4 sm:px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                 <h3 className="font-bold text-slate-700 text-sm">
-                  Search Results <span className="ml-2 text-slate-400 font-normal">({displayedStudents.length})</span>
+                  Search Results <span className="ml-2 text-slate-400 font-normal">({totalItems})</span>
                 </h3>
-                <button className="text-slate-500 hover:text-indigo-600">
-                  <SlidersHorizontal className="w-4 h-4" />
-                </button>
+
+                {/* Items Per Page Select */}
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-slate-500 hidden sm:inline">Rows per page:</span>
+                  <div className="relative">
+                    <select
+                      className="appearance-none bg-white border border-slate-200 text-slate-700 text-xs py-1 pl-2 pr-6 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-100 cursor-pointer"
+                      value={itemsPerPage}
+                      onChange={handleLimitChange}
+                    >
+                      <option value={5}>5</option>
+                      <option value={10}>10</option>
+                      <option value={20}>20</option>
+                      <option value={50}>50</option>
+                    </select>
+                    <ChevronDown className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400 pointer-events-none" />
+                  </div>
+                </div>
               </div>
+
 
               <div className="relative min-h-[200px]">
                 {/* Search Loading Overlay */}
@@ -509,15 +555,33 @@ export const StudentDirectory: React.FC = () => {
               </div>
 
               {/* Pagination */}
-              {displayedStudents.length > 0 && (
-                <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between text-xs text-slate-500">
-                  <span>Showing 1 to {displayedStudents.length} of {displayedStudents.length} entries</span>
-                  <div className="flex gap-2">
-                    <button className="px-3 py-1 bg-white border border-slate-200 rounded hover:bg-slate-50 disabled:opacity-50" disabled>Previous</button>
-                    <button className="px-3 py-1 bg-white border border-slate-200 rounded hover:bg-slate-50 disabled:opacity-50" disabled>Next</button>
-                  </div>
+              <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between text-xs text-slate-500">
+                <span>
+                  Showing {(currentPage - 1) * itemsPerPage + 1}
+                  {" "}to{" "}
+                  {Math.min(currentPage * itemsPerPage, totalItems)}
+                  {" "}of {totalItems} entries
+                </span>
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1 bg-white border rounded disabled:opacity-50"
+                  >
+                    Previous
+                  </button>
+
+                  <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1 bg-white border rounded disabled:opacity-50"
+                  >
+                    Next
+                  </button>
                 </div>
-              )}
+              </div>
+
             </div>
           </div>
         </div>
