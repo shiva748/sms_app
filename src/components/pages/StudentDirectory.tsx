@@ -16,80 +16,6 @@ import { useAppSelector } from '../../store/hooks';
 import { Button } from '../ui/Button';
 import { API_BASE_URL as API, FILE_BASE_URL } from '../config/api';
 
-// Mock Data
-const MOCK_STUDENTS = [
-  {
-    id: 1,
-    name: "Aarav Patel",
-    dateOfBirth: "2008-05-15",
-    primaryContactName: "Rajesh Patel",
-    primaryContactPhone: "9876543210",
-    primaryContactEmail: "rajesh@example.com",
-    status: "Active",
-    avatarColor: "bg-blue-100 text-blue-600",
-    grade: "10",
-    section: "A",
-    rollNumber: "01",
-    admissionNumber: "ADM-2024-001"
-  },
-  {
-    id: 2,
-    name: "Diya Sharma",
-    dateOfBirth: "2008-08-22",
-    primaryContactName: "Sunita Sharma",
-    primaryContactPhone: "9876543211",
-    primaryContactEmail: "sunita@example.com",
-    status: "Active",
-    avatarColor: "bg-purple-100 text-purple-600",
-    grade: "10",
-    section: "A",
-    rollNumber: "02",
-    admissionNumber: "ADM-2024-002"
-  },
-  {
-    id: 3,
-    name: "Rohan Gupta",
-    dateOfBirth: "2009-02-10",
-    primaryContactName: "Amit Gupta",
-    primaryContactPhone: "9876543212",
-    primaryContactEmail: "",
-    status: "Inactive",
-    avatarColor: "bg-orange-100 text-orange-600",
-    grade: "9",
-    section: "B",
-    rollNumber: "15",
-    admissionNumber: "ADM-2024-003"
-  },
-  {
-    id: 4,
-    name: "Sanya Malhotra",
-    dateOfBirth: "2008-11-05",
-    primaryContactName: "Vikram Malhotra",
-    primaryContactPhone: "9876543213",
-    primaryContactEmail: "vikram@example.com",
-    status: "Active",
-    avatarColor: "bg-emerald-100 text-emerald-600",
-    grade: "10",
-    section: "B",
-    rollNumber: "08",
-    admissionNumber: "ADM-2024-004"
-  },
-  {
-    id: 5,
-    name: "Kabir Singh",
-    dateOfBirth: "2006-07-18",
-    primaryContactName: "Preeti Singh",
-    primaryContactPhone: "9876543214",
-    primaryContactEmail: "",
-    status: "Suspended",
-    avatarColor: "bg-red-100 text-red-600",
-    grade: "12",
-    section: "Science",
-    rollNumber: "42",
-    admissionNumber: "ADM-2024-005"
-  },
-];
-
 const getAvatarColor = (name: string) => {
   const colors = [
     'bg-blue-100 text-blue-600',
@@ -186,9 +112,21 @@ export const StudentDirectory: React.FC = () => {
     }
   };
 
-  const handleSuccess = () => {
+  const handleSuccess = (student) => {
     // If we are in a sub-flow (edit/class/status), return to details
     if (['edit', 'class', 'status'].includes(modalType || '')) {
+      if (student) {
+        setSelectedStudent(student);
+        const students = [];
+        displayedStudents.forEach(element => {
+          if (element.id == student.id) {
+            students.push(student);
+          } else {
+            students.push(element);
+          }
+        });
+        setDisplayedStudents(students);
+      }
       setModalType('details');
       // In a real app, refresh data here
     } else {
@@ -203,12 +141,12 @@ export const StudentDirectory: React.FC = () => {
 
   const clearFilters = () => {
     setFilters({ name: '', status: '', grade: '', section: '' });
-    setDisplayedStudents(MOCK_STUDENTS);
+    handleSearch()
   };
 
   const handleSearch = async () => {
     setIsSearching(true);
-    const req = await fetch(`${API}/schools/${school.id}/students/search?name=${filters.name}${filters.grade ? `&gradeId=${filters.grade}` : ""}${filters.section ? `&sectionId=${filters.section}` : ""}${filters.status ? `status=&${filters.status}` : ""}`, {
+    const req = await fetch(`${API}/schools/${school.id}/students/search?name=${filters.name}&gradeId=${filters.grade ? `${filters.grade}` : ""}&sectionId=${filters.section ? `${filters.section}` : ""}&status=${filters.status ? `${filters.status}` : ""}`, {
       method: "GET",
       credentials: "include",
       headers: { "X-School-Id": school.id }
@@ -291,7 +229,7 @@ export const StudentDirectory: React.FC = () => {
                   <Input
                     label="Search Student"
                     variant="light"
-                    placeholder="Name or Guardian"
+                    placeholder="Name"
                     value={filters.name}
                     onChange={(e) => handleFilterChange('name', e.target.value)}
                     icon={<Search className="w-4 h-4" />}
@@ -356,10 +294,11 @@ export const StudentDirectory: React.FC = () => {
                       onChange={(e) => handleFilterChange('status', e.target.value)}
                     >
                       <option value="">All Statuses</option>
-                      <option value="Active">Active</option>
-                      <option value="Inactive">Inactive</option>
-                      <option value="Suspended">Suspended</option>
-                      <option value="Alumni">Alumni</option>
+                      <option value="ACTIVE">Active</option>
+                      <option value="INACTIVE">Inactive</option>
+                      <option value="SUSPENDED">Suspended</option>
+                      <option value="TRANSFERRED">Transferred</option>
+                      <option value="ALUMNI">Alumni</option>
                     </select>
                     <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                   </div>
@@ -458,12 +397,12 @@ export const StudentDirectory: React.FC = () => {
                             <td className="px-6 py-4">
                               <span className={`
                                 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border
-                                ${student.status === 'Active' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
-                                  student.status === 'Inactive' ? 'bg-slate-100 text-slate-600 border-slate-200' :
+                                ${student.status === 'ACTIVE' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
+                                  student.status === 'INACTIVE' ? 'bg-slate-100 text-slate-600 border-slate-200' :
                                     'bg-red-50 text-red-700 border-red-100'}
                               `}>
-                                <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${student.status === 'Active' ? 'bg-emerald-500' :
-                                  student.status === 'Inactive' ? 'bg-slate-400' :
+                                <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${student.status === 'ACTIVE' ? 'bg-emerald-500' :
+                                  student.status === 'INACTIVE' ? 'bg-slate-400' :
                                     'bg-red-500'
                                   }`}></span>
                                 {student.status}
@@ -505,8 +444,8 @@ export const StudentDirectory: React.FC = () => {
                           {/* Card Header */}
                           <div className="flex justify-between items-start">
                             <div className="flex items-center gap-3">
-                              <div className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold shadow-sm ${student.avatarColor}`}>
-                                {student.name.charAt(0)}
+                              <div className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold shadow-sm ${getAvatarColor(student.name)}`}>
+                                <img className={"w-12 h-12 rounded-full flex items-center justify-center"} src={`${FILE_BASE_URL}/${student.photo}`} alt={student.name.charAt(0)} srcset="" />
                               </div>
                               <div>
                                 <h4 className="text-base font-bold text-slate-900 leading-tight">{student.name}</h4>
@@ -518,8 +457,8 @@ export const StudentDirectory: React.FC = () => {
                             </div>
                             <span className={`
                               inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border
-                              ${student.status === 'Active' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
-                                student.status === 'Inactive' ? 'bg-slate-100 text-slate-600 border-slate-200' :
+                              ${student.status === 'ACTIVE' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
+                                student.status === 'INACTIVE' ? 'bg-slate-100 text-slate-600 border-slate-200' :
                                   'bg-red-50 text-red-700 border-red-100'}
                             `}>
                               {student.status}
@@ -656,8 +595,7 @@ export const StudentDirectory: React.FC = () => {
           maxWidth="md"
         >
           <UpdateStudentStatusForm
-            studentName={selectedStudent.name}
-            currentStatus={selectedStudent.status}
+            student={selectedStudent}
             onSuccess={handleSuccess}
             onCancel={handleBackToDetails}
           />
