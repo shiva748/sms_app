@@ -1,16 +1,115 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Search, Filter, Eye, FileEdit, Download, ChevronDown, User, SlidersHorizontal, X, Loader2, Calendar, Phone
+  Search, Filter, Download, ChevronDown, User, SlidersHorizontal, X, Loader2, Phone, BookOpen, Eye, Calendar
 } from 'lucide-react';
 import { Sidebar } from '../ui/Sidebar';
 import { TopBar } from '../ui/TopBar';
 import { Modal } from '../ui/Modal';
 import { StudentAdmissionForm } from '../ui/StudentAdmissionForm';
+import { AssignClassForm } from '../ui/AssignClassForm';
+import { UpdateStudentStatusForm } from '../ui/UpdateStudentStatusForm';
+import { StudentDetailView } from '../ui/StudentDetailView';
 import { LoadingScreen } from '../ui/LoadingScreen';
 import { Input } from '../ui/Input';
-import { Button } from '../ui/Button';
 import { useAppSelector } from '../../store/hooks';
+import { Button } from '../ui/Button';
+import { API_BASE_URL as API, FILE_BASE_URL } from '../config/api';
+
+// Mock Data
+const MOCK_STUDENTS = [
+  {
+    id: 1,
+    name: "Aarav Patel",
+    dateOfBirth: "2008-05-15",
+    primaryContactName: "Rajesh Patel",
+    primaryContactPhone: "9876543210",
+    primaryContactEmail: "rajesh@example.com",
+    status: "Active",
+    avatarColor: "bg-blue-100 text-blue-600",
+    grade: "10",
+    section: "A",
+    rollNumber: "01",
+    admissionNumber: "ADM-2024-001"
+  },
+  {
+    id: 2,
+    name: "Diya Sharma",
+    dateOfBirth: "2008-08-22",
+    primaryContactName: "Sunita Sharma",
+    primaryContactPhone: "9876543211",
+    primaryContactEmail: "sunita@example.com",
+    status: "Active",
+    avatarColor: "bg-purple-100 text-purple-600",
+    grade: "10",
+    section: "A",
+    rollNumber: "02",
+    admissionNumber: "ADM-2024-002"
+  },
+  {
+    id: 3,
+    name: "Rohan Gupta",
+    dateOfBirth: "2009-02-10",
+    primaryContactName: "Amit Gupta",
+    primaryContactPhone: "9876543212",
+    primaryContactEmail: "",
+    status: "Inactive",
+    avatarColor: "bg-orange-100 text-orange-600",
+    grade: "9",
+    section: "B",
+    rollNumber: "15",
+    admissionNumber: "ADM-2024-003"
+  },
+  {
+    id: 4,
+    name: "Sanya Malhotra",
+    dateOfBirth: "2008-11-05",
+    primaryContactName: "Vikram Malhotra",
+    primaryContactPhone: "9876543213",
+    primaryContactEmail: "vikram@example.com",
+    status: "Active",
+    avatarColor: "bg-emerald-100 text-emerald-600",
+    grade: "10",
+    section: "B",
+    rollNumber: "08",
+    admissionNumber: "ADM-2024-004"
+  },
+  {
+    id: 5,
+    name: "Kabir Singh",
+    dateOfBirth: "2006-07-18",
+    primaryContactName: "Preeti Singh",
+    primaryContactPhone: "9876543214",
+    primaryContactEmail: "",
+    status: "Suspended",
+    avatarColor: "bg-red-100 text-red-600",
+    grade: "12",
+    section: "Science",
+    rollNumber: "42",
+    admissionNumber: "ADM-2024-005"
+  },
+];
+
+const getAvatarColor = (name: string) => {
+  const colors = [
+    'bg-blue-100 text-blue-600',
+    'bg-purple-100 text-purple-600',
+    'bg-emerald-100 text-emerald-600',
+    'bg-orange-100 text-orange-600',
+    'bg-pink-100 text-pink-600',
+    'bg-indigo-100 text-indigo-600',
+    'bg-teal-100 text-teal-600',
+    'bg-cyan-100 text-cyan-600',
+    'bg-rose-100 text-rose-600'
+  ];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return colors[Math.abs(hash) % colors.length];
+};
+
+type ActionType = 'details' | 'admission' | 'edit' | 'class' | 'status' | null;
 
 const gradeOrderMap = {
   PRE_NURSERY: 0,
@@ -31,76 +130,6 @@ const gradeOrderMap = {
   GRADE_12: 15,
 };
 
-// Mock Data
-const MOCK_STUDENTS = [
-  {
-    id: 1,
-    name: "Aarav Patel",
-    dateOfBirth: "2008-05-15",
-    primaryContactName: "Rajesh Patel",
-    primaryContactPhone: "9876543210",
-    status: "Active",
-    avatarColor: "bg-blue-100 text-blue-600",
-    grade: "10",
-    section: "A"
-  },
-  {
-    id: 2,
-    name: "Diya Sharma",
-    dateOfBirth: "2008-08-22",
-    primaryContactName: "Sunita Sharma",
-    primaryContactPhone: "9876543211",
-    status: "Active",
-    avatarColor: "bg-purple-100 text-purple-600",
-    grade: "10",
-    section: "A"
-  },
-  {
-    id: 3,
-    name: "Rohan Gupta",
-    dateOfBirth: "2009-02-10",
-    primaryContactName: "Amit Gupta",
-    primaryContactPhone: "9876543212",
-    status: "Inactive",
-    avatarColor: "bg-orange-100 text-orange-600",
-    grade: "9",
-    section: "B"
-  },
-  {
-    id: 4,
-    name: "Sanya Malhotra",
-    dateOfBirth: "2008-11-05",
-    primaryContactName: "Vikram Malhotra",
-    primaryContactPhone: "9876543213",
-    status: "Active",
-    avatarColor: "bg-emerald-100 text-emerald-600",
-    grade: "10",
-    section: "B"
-  },
-  {
-    id: 5,
-    name: "Kabir Singh",
-    dateOfBirth: "2006-07-18",
-    primaryContactName: "Preeti Singh",
-    primaryContactPhone: "9876543214",
-    status: "Suspended",
-    avatarColor: "bg-red-100 text-red-600",
-    grade: "12",
-    section: "Science"
-  },
-  {
-    id: 6,
-    name: "Ishaan Khatter",
-    dateOfBirth: "2010-01-30",
-    primaryContactName: "Neelima Azeem",
-    primaryContactPhone: "9876543215",
-    status: "Active",
-    avatarColor: "bg-indigo-100 text-indigo-600",
-    grade: "8",
-    section: "C"
-  },
-];
-
 export const StudentDirectory: React.FC = () => {
   const formatGrade = (grade) => {
     return grade
@@ -109,14 +138,17 @@ export const StudentDirectory: React.FC = () => {
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
   };
-  const { schoolData } = useAppSelector((state) => state.auth)
+  const { schoolData, school } = useAppSelector((state) => state.auth)
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [showAdmissionModal, setShowAdmissionModal] = useState(false);
+
+  // Modal & Action State
+  const [modalType, setModalType] = useState<ActionType>(null);
+  const [selectedStudent, setSelectedStudent] = useState<any>(null);
 
   // Search State
-  const [displayedStudents, setDisplayedStudents] = useState(MOCK_STUDENTS);
+  const [displayedStudents, setDisplayedStudents] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
 
   // Filter State
@@ -128,22 +160,40 @@ export const StudentDirectory: React.FC = () => {
   });
 
   useEffect(() => {
-    // Simulate initial page load
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 800);
-    return () => clearTimeout(timer);
+    handleSearch()
   }, []);
 
   const handleTabChange = (tabId: string) => {
     if (tabId === 'dashboard') navigate('/head/dashboard');
     if (tabId === 'students') navigate('/head/students');
-    // Add other routes as needed
   };
 
-  const handleAdmissionSuccess = () => {
-    setShowAdmissionModal(false);
-    alert("Student admitted successfully!");
+  const handleAction = (type: ActionType, student?: any) => {
+    setSelectedStudent(student || null);
+    setModalType(type);
+  };
+
+  const closeModal = () => {
+    setModalType(null);
+    setSelectedStudent(null);
+  };
+
+  const handleBackToDetails = () => {
+    if (selectedStudent) {
+      setModalType('details');
+    } else {
+      closeModal();
+    }
+  };
+
+  const handleSuccess = () => {
+    // If we are in a sub-flow (edit/class/status), return to details
+    if (['edit', 'class', 'status'].includes(modalType || '')) {
+      setModalType('details');
+      // In a real app, refresh data here
+    } else {
+      closeModal();
+    }
   };
 
   // Filter Logic
@@ -156,24 +206,18 @@ export const StudentDirectory: React.FC = () => {
     setDisplayedStudents(MOCK_STUDENTS);
   };
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     setIsSearching(true);
-
-    // Simulate API Call
-    setTimeout(() => {
-      const results = MOCK_STUDENTS.filter(student => {
-        const matchName = student.name.toLowerCase().includes(filters.name.toLowerCase()) ||
-          student.primaryContactName.toLowerCase().includes(filters.name.toLowerCase());
-        const matchStatus = filters.status ? student.status === filters.status : true;
-        const matchGrade = filters.grade ? student.grade === filters.grade : true;
-        const matchSection = filters.section ? student.section === filters.section : true;
-
-        return matchName && matchStatus && matchGrade && matchSection;
-      });
-
-      setDisplayedStudents(results);
-      setIsSearching(false);
-    }, 800); // 800ms delay to simulate API
+    const req = await fetch(`${API}/schools/${school.id}/students/search?name=${filters.name}${filters.grade ? `&gradeId=${filters.grade}` : ""}${filters.section ? `&sectionId=${filters.section}` : ""}${filters.status ? `status=&${filters.status}` : ""}`, {
+      method: "GET",
+      credentials: "include",
+      headers: { "X-School-Id": school.id }
+    });
+    const res = await req.json();
+    if (res.success) {
+      setDisplayedStudents(res.data);
+    }
+    setIsSearching(false)
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -226,7 +270,7 @@ export const StudentDirectory: React.FC = () => {
                 </Button>
                 <Button
                   className="bg-indigo-600 text-white hover:bg-indigo-700"
-                  onClick={() => setShowAdmissionModal(true)}
+                  onClick={() => handleAction('admission')}
                 >
                   <User className="w-4 h-4 mr-2" />
                   Add Student
@@ -377,7 +421,7 @@ export const StudentDirectory: React.FC = () => {
                         <th className="px-6 py-4">Guardian Name</th>
                         <th className="px-6 py-4">Guardian Phone</th>
                         <th className="px-6 py-4">Status</th>
-                        <th className="px-6 py-4 text-right">Actions</th>
+                        <th className="px-6 py-4 text-center">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -386,10 +430,11 @@ export const StudentDirectory: React.FC = () => {
                           <tr key={student.id} className="hover:bg-slate-50 transition-colors group">
                             <td className="px-6 py-4">
                               <div className="flex items-center gap-3">
-                                <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold ${student.avatarColor}`}>
-                                  {student.name.charAt(0)}
+
+                                <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold ${getAvatarColor(student.name)}`}>
+                                  <img className={"w-9 h-9 rounded-full flex items-center justify-center"} src={`${FILE_BASE_URL}/${student.photo}`} alt={student.name.charAt(0)} srcset="" />
                                 </div>
-                                <p className="text-sm font-semibold text-slate-900">{student.name}</p>
+                                <span className="text-sm font-semibold text-slate-900">{student.name}</span>
                               </div>
                             </td>
                             <td className="px-6 py-4">
@@ -399,16 +444,15 @@ export const StudentDirectory: React.FC = () => {
                               </div>
                             </td>
                             <td className="px-6 py-4">
-                              <span className="text-sm font-medium text-slate-700">{student.primaryContactName}</span>
+                              <span className="text-sm text-slate-600 font-medium">{student.primaryContactName}</span>
                             </td>
                             <td className="px-6 py-4">
                               <a
                                 href={`tel:${student.primaryContactPhone}`}
-                                className="flex items-center gap-2 text-slate-600 hover:text-indigo-600 transition-colors group/phone"
-                                title="Click to Call"
+                                className="text-sm font-medium text-slate-600 hover:text-indigo-600 flex items-center gap-2 transition-colors"
                               >
-                                <Phone className="w-3.5 h-3.5 text-slate-400 group-hover/phone:text-indigo-500" />
-                                <span className="text-sm font-medium">{student.primaryContactPhone}</span>
+                                <Phone className="w-3.5 h-3.5 text-slate-400" />
+                                {student.primaryContactPhone}
                               </a>
                             </td>
                             <td className="px-6 py-4">
@@ -425,15 +469,14 @@ export const StudentDirectory: React.FC = () => {
                                 {student.status}
                               </span>
                             </td>
-                            <td className="px-6 py-4 text-right">
-                              <div className="flex justify-end gap-2">
-                                <button className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="View Profile">
-                                  <Eye className="w-4 h-4" />
-                                </button>
-                                <button className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Edit">
-                                  <FileEdit className="w-4 h-4" />
-                                </button>
-                              </div>
+                            <td className="px-6 py-4 text-center">
+                              <button
+                                onClick={() => handleAction('details', student)}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors border border-indigo-100"
+                              >
+                                <Eye className="w-3.5 h-3.5" />
+                                View Profile
+                              </button>
                             </td>
                           </tr>
                         ))
@@ -457,17 +500,19 @@ export const StudentDirectory: React.FC = () => {
                   {displayedStudents.length > 0 ? (
                     <div className="p-4 space-y-4">
                       {displayedStudents.map((student) => (
-                        <div key={student.id} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-3 transition-shadow hover:shadow-md">
+                        <div key={student.id} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-4 transition-shadow hover:shadow-md">
+
+                          {/* Card Header */}
                           <div className="flex justify-between items-start">
                             <div className="flex items-center gap-3">
-                              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold ${student.avatarColor}`}>
+                              <div className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold shadow-sm ${student.avatarColor}`}>
                                 {student.name.charAt(0)}
                               </div>
                               <div>
-                                <h4 className="text-sm font-bold text-slate-900">{student.name}</h4>
-                                <div className="flex items-center gap-1.5 mt-0.5 text-slate-500">
+                                <h4 className="text-base font-bold text-slate-900 leading-tight">{student.name}</h4>
+                                <div className="flex items-center gap-1.5 mt-1 text-slate-500">
                                   <Calendar className="w-3 h-3" />
-                                  <span className="text-xs">{student.dateOfBirth}</span>
+                                  <span className="text-xs font-medium">{student.dateOfBirth}</span>
                                 </div>
                               </div>
                             </div>
@@ -481,33 +526,34 @@ export const StudentDirectory: React.FC = () => {
                             </span>
                           </div>
 
-                          <div className="grid grid-cols-1 gap-2 text-xs text-slate-500 bg-slate-50 p-3 rounded-lg border border-slate-100">
-                            <div className="flex justify-between items-center border-b border-slate-100 pb-2 mb-1">
-                              <span className="uppercase font-bold text-slate-400 text-[10px]">Guardian Name</span>
-                              <span className="font-medium text-slate-700">{student.primaryContactName}</span>
+                          {/* Card Body - Guardian Info */}
+                          <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 space-y-2">
+                            <div className="flex justify-between items-center">
+                              <span className="uppercase font-bold text-slate-400 text-[10px] tracking-wide">Guardian Name</span>
+                              <span className="font-medium text-sm text-slate-700">{student.primaryContactName}</span>
                             </div>
                             <div className="flex justify-between items-center">
-                              <span className="uppercase font-bold text-slate-400 text-[10px]">Guardian Phone</span>
+                              <span className="uppercase font-bold text-slate-400 text-[10px] tracking-wide">Guardian Phone</span>
                               <a
                                 href={`tel:${student.primaryContactPhone}`}
-                                className="flex items-center gap-1.5 px-2 py-1 rounded bg-white hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 transition-colors group/phone cursor-pointer"
+                                className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-700 hover:text-indigo-600 hover:border-indigo-200 transition-colors"
                               >
-                                <Phone className="w-3 h-3 text-slate-400 group-hover/phone:text-indigo-500" />
-                                <span className="font-medium text-slate-700 group-hover/phone:text-indigo-700">{student.primaryContactPhone}</span>
+                                <Phone className="w-3 h-3 text-slate-400" />
+                                <span className="text-xs font-bold">{student.primaryContactPhone}</span>
                               </a>
                             </div>
                           </div>
 
-                          <div className="flex gap-2 mt-1">
-                            <Button variant="outline" className="flex-1 h-9 text-xs justify-center bg-white border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200">
-                              <Eye className="w-3.5 h-3.5 mr-1.5" />
-                              View Profile
-                            </Button>
-                            <Button variant="outline" className="flex-1 h-9 text-xs justify-center bg-white border-slate-200 hover:bg-amber-50 hover:text-amber-600 hover:border-amber-200">
-                              <FileEdit className="w-3.5 h-3.5 mr-1.5" />
-                              Edit
-                            </Button>
-                          </div>
+                          {/* Card Footer */}
+                          <Button
+                            onClick={() => handleAction('details', student)}
+                            fullWidth
+                            variant="outline"
+                            className="h-10 text-xs justify-center border-slate-200 text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200"
+                          >
+                            <Eye className="w-4 h-4 mr-2" />
+                            View Profile
+                          </Button>
                         </div>
                       ))}
                     </div>
@@ -539,18 +585,84 @@ export const StudentDirectory: React.FC = () => {
 
       </main>
 
-      {/* Student Admission Modal */}
-      <Modal
-        isOpen={showAdmissionModal}
-        onClose={() => setShowAdmissionModal(false)}
-        title="New Student Admission"
-        maxWidth="4xl"
-      >
-        <StudentAdmissionForm
-          onSuccess={handleAdmissionSuccess}
-          onCancel={() => setShowAdmissionModal(false)}
-        />
-      </Modal>
+      {/* Dynamic Modals based on Action Type */}
+
+      {/* 0. Student Detail View */}
+      {modalType === 'details' && selectedStudent && (
+        <Modal
+          isOpen={true}
+          onClose={closeModal}
+          title="Student Profile"
+          maxWidth="2xl"
+        >
+          <StudentDetailView
+            student={selectedStudent}
+            onClose={closeModal}
+            onEdit={() => setModalType('edit')}
+            onAssignClass={() => setModalType('class')}
+            onUpdateStatus={() => setModalType('status')}
+          />
+        </Modal>
+      )}
+
+      {/* 1. Admission / Edit Details Modal */}
+      {(modalType === 'admission' || modalType === 'edit') && (
+        <Modal
+          isOpen={true}
+          onClose={modalType === 'edit' ? handleBackToDetails : closeModal}
+          title={modalType === 'edit' ? "Update Student Details" : "New Student Admission"}
+          maxWidth="4xl"
+        >
+          <StudentAdmissionForm
+            initialData={selectedStudent ? {
+              name: selectedStudent.name,
+              dateOfBirth: selectedStudent.dateOfBirth,
+              admissionNumber: selectedStudent.admissionNumber,
+              primaryContactName: selectedStudent.primaryContactName,
+              primaryContactPhone: selectedStudent.primaryContactPhone,
+              primaryContactEmail: selectedStudent.primaryContactEmail
+            } : undefined}
+            onSuccess={handleSuccess}
+            onCancel={modalType === 'edit' ? handleBackToDetails : closeModal}
+          />
+        </Modal>
+      )}
+
+      {/* 2. Assign Class Modal */}
+      {modalType === 'class' && selectedStudent && (
+        <Modal
+          isOpen={true}
+          onClose={handleBackToDetails}
+          title="Assign Class & Section"
+          maxWidth="md"
+        >
+          <AssignClassForm
+            studentName={selectedStudent.name}
+            currentGrade={selectedStudent.grade}
+            currentSection={selectedStudent.section}
+            currentRollNumber={selectedStudent.rollNumber}
+            onSuccess={handleSuccess}
+            onCancel={handleBackToDetails}
+          />
+        </Modal>
+      )}
+
+      {/* 3. Update Status Modal */}
+      {modalType === 'status' && selectedStudent && (
+        <Modal
+          isOpen={true}
+          onClose={handleBackToDetails}
+          title="Update Status"
+          maxWidth="md"
+        >
+          <UpdateStudentStatusForm
+            studentName={selectedStudent.name}
+            currentStatus={selectedStudent.status}
+            onSuccess={handleSuccess}
+            onCancel={handleBackToDetails}
+          />
+        </Modal>
+      )}
     </div>
   );
 };

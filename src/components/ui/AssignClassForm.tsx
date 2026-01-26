@@ -1,0 +1,131 @@
+import React, { useState } from 'react';
+import { BookOpen, Save, Hash } from 'lucide-react';
+import { Button } from '../ui/Button';
+import { Input } from '../ui/Input';
+
+interface AssignClassFormProps {
+  studentName: string;
+  currentGrade?: string;
+  currentSection?: string;
+  currentRollNumber?: string;
+  onSuccess?: () => void;
+  onCancel: () => void;
+}
+
+export const AssignClassForm: React.FC<AssignClassFormProps> = ({ 
+  studentName, 
+  currentGrade = '', 
+  currentSection = '', 
+  currentRollNumber = '',
+  onSuccess, 
+  onCancel 
+}) => {
+  const [grade, setGrade] = useState(currentGrade);
+  const [section, setSection] = useState(currentSection);
+  const [rollNumber, setRollNumber] = useState(currentRollNumber);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
+    // Simulate API call
+    setTimeout(() => {
+        console.log("Assign Class Payload:", { studentName, grade, section, rollNumber });
+        if (onSuccess) onSuccess();
+        setIsLoading(false);
+    }, 1000);
+  };
+
+  const SelectStyles = "w-full px-3 py-2.5 sm:py-3 rounded-xl text-xs xs:text-sm shadow-sm border border-slate-300 text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-brand-200 focus:border-brand-500 hover:border-slate-400 transition-all appearance-none cursor-pointer";
+
+  return (
+    <form onSubmit={handleSubmit} className="w-full">
+        <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 mb-6">
+            <div className="flex gap-3">
+                <div className="p-2 bg-indigo-100 text-indigo-600 rounded-lg h-fit">
+                    <BookOpen className="w-5 h-5" />
+                </div>
+                <div>
+                    <h4 className="text-sm font-bold text-slate-800 mb-1">Class Enrollment</h4>
+                    <p className="text-xs text-slate-500 leading-relaxed">
+                        Assigning <strong>{studentName}</strong> to a specific academic class and section.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+             {/* Grade Select */}
+             <div>
+                <label className="block text-[10px] xs:text-xs font-bold uppercase tracking-wider mb-1.5 sm:mb-2 text-slate-700">
+                Grade / Class <span className="text-red-500">*</span>
+                </label>
+                <select 
+                    className={SelectStyles}
+                    value={grade}
+                    onChange={(e) => setGrade(e.target.value)}
+                    required
+                >
+                    <option value="" disabled>Select Grade</option>
+                    {[...Array(12)].map((_, i) => (
+                        <option key={i} value={String(i + 1)}>Class {i + 1}</option>
+                    ))}
+                </select>
+            </div>
+
+            {/* Section Select */}
+            <div>
+                <label className="block text-[10px] xs:text-xs font-bold uppercase tracking-wider mb-1.5 sm:mb-2 text-slate-700">
+                Section <span className="text-red-500">*</span>
+                </label>
+                <select 
+                    className={SelectStyles}
+                    value={section}
+                    onChange={(e) => setSection(e.target.value)}
+                    required
+                >
+                    <option value="" disabled>Select Section</option>
+                    {['A', 'B', 'C', 'D', 'Science', 'Commerce', 'Arts'].map(sec => (
+                        <option key={sec} value={sec}>{sec}</option>
+                    ))}
+                </select>
+            </div>
+        </div>
+
+        <div className="mb-6">
+            <Input 
+                label="Roll Number"
+                placeholder="e.g. 24"
+                value={rollNumber}
+                onChange={(e) => setRollNumber(e.target.value)}
+                icon={<Hash className="w-4 h-4" />}
+                rightElement={
+                    <div className="pr-3 text-[10px] text-slate-400 font-medium uppercase tracking-wider">
+                      Optional
+                    </div>
+                }
+            />
+        </div>
+
+        <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+             <Button 
+                type="button" 
+                variant="ghost" 
+                onClick={onCancel}
+                disabled={isLoading}
+            >
+                Cancel
+            </Button>
+            <Button 
+                type="submit" 
+                isLoading={isLoading}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white min-w-[120px]"
+            >
+                <Save className="w-4 h-4 mr-2" />
+                Save Enrollment
+            </Button>
+        </div>
+    </form>
+  );
+};

@@ -5,7 +5,7 @@ import {
   X, ChevronRight, LogOut, School, ArrowLeftRight
 } from 'lucide-react';
 import { useAppSelector } from '../../store/hooks';
-import { API_BASE_URL as API } from '../config/api';
+import { API_BASE_URL as API, FILE_BASE_URL } from '../config/api';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -53,7 +53,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Sidebar Header - Added safe-area-inset-top support */}
         <div className="px-6 pb-6 pt-[calc(1.5rem+env(safe-area-inset-top))] flex items-center gap-3 border-b border-slate-800">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-            <img className="w-8 h-8 object-cover rounded-lg" src={`${API}/files/${school.logo}`} />
+            <img className="w-8 h-8 object-cover rounded-lg" src={`${FILE_BASE_URL}/${school.logo}`} />
           </div>
           <div>
             <h1 className="font-bold text-lg tracking-tight">EduSphere</h1>

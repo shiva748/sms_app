@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { useAppSelector, useAppDispatch } from '../../store/hooks';
-import { API_BASE_URL } from '../config/api';
+import { API_BASE_URL, FILE_BASE_URL } from '../config/api';
 import { Toast } from '@capacitor/toast';
 import { setRole, setSchool } from '../../store/slices/authSlice';
 
@@ -160,7 +160,7 @@ export const HeadProfileSelection: React.FC = ({ back }) => {
                     >
                       {profile.school.logo ? (
                         <img
-                          src={`${API_BASE_URL}/files/${profile.school.logo}`}
+                          src={`${FILE_BASE_URL}/${profile.school.logo}`}
                           className="w-12 h-12 object-cover rounded-lg"
                           alt="school logo"
                         />
