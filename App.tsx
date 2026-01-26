@@ -15,6 +15,7 @@ import { LoadingScreen } from "./src/components/ui/LoadingScreen";
 import { HeadProfileSelection } from "./src/components/pages/HeadProfileSelection";
 import { TeacherProfileSelection } from "./src/components/pages/TeacherProfileSelection";
 import { HeadDashboard } from "./src/components/pages/HeadDashboard";
+import { StudentDirectory } from "./src/components/pages/StudentDirectory";
 
 
 const AppLayout: React.FC = () => {
@@ -114,6 +115,7 @@ const AppLayout: React.FC = () => {
           <Route path="/" element={<HeadDashboard />} />
           <Route path="/change-role" element={<RoleSelection back={"/"} />} />
           <Route path="/school-registration" element={<SchoolRegistration />} />
+          <Route path="/student-directory" element={<StudentDirectory />} />
           <Route path="/head/select-profile" element={<HeadProfileSelection back={"/change-role"} />} />
           <Route path="/teacher/select-profile" element={<TeacherProfileSelection back={"/change-role"} />} />
         </>

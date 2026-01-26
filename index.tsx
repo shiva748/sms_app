@@ -12,11 +12,9 @@ if (!rootElement) {
 
 const root = ReactDOM.createRoot(rootElement);
 root.render(
-  <React.StrictMode>
     <Provider store={store}>
       <div className="min-h-screen bg-slate-900 safe-area">
         <App />
       </div>
     </Provider>
-  </React.StrictMode>
 );

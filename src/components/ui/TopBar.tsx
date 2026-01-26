@@ -8,7 +8,8 @@ interface TopBarProps {
 }
 
 export const TopBar: React.FC<TopBarProps> = ({
-  onMenuClick
+  onMenuClick,
+  subtitle,
 }) => {
   const { school } = useAppSelector(state => state.auth)
   const [showNotifications, setShowNotifications] = useState(false);
@@ -79,7 +80,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           <h2 className="text-xl font-bold text-slate-800">{school.name}</h2>
           <p className="text-xs text-slate-500 flex items-center gap-1">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            Dashboard
+            {subtitle}
           </p>
         </div>
       </div>

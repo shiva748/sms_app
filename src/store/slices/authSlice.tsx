@@ -17,12 +17,20 @@ type User = {
   [key: string]: any;
 };
 
+type SchoolData = {
+  teachers: string,
+  students: string,
+  grades: any[],
+  sections: any[],
+  academicYear: any | null
+}
 
 export type AuthState = {
   authenticated: boolean;
   user: User | null;
   role: "SCHOOL_HEAD" | "TEACHER" | "PARENT" | null;
   school: any | null;
+  schoolData: SchoolData | null;
   token: string | null;
 };
 
@@ -34,6 +42,7 @@ const initialState: AuthState = {
   role: null,
   school: null,
   token: null,
+  schoolData: null
 };
 
 /* ================= SLICE ================= */
@@ -54,6 +63,9 @@ const authSlice = createSlice({
       state.school = action.payload;
     },
 
+    setSchoolData(state, action: PayloadAction<any>) {
+      state.schoolData = action.payload;
+    },
     setToken(state, action: PayloadAction<string>) {
       state.token = action.payload;
     },
@@ -68,6 +80,7 @@ const authSlice = createSlice({
       state.school = null;
       state.token = null;
       state.authenticated = false;
+      state.schoolData = null
     },
   },
 });
@@ -80,6 +93,7 @@ export const {
   setSchool,
   setToken,
   setAuthenticated,
+  setSchoolData,
   logout,
 } = authSlice.actions;
 

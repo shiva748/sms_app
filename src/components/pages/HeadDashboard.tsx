@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Users, GraduationCap, Banknote, FileBarChart, Plus, Wallet, Calendar,
-  ArrowUpRight, ArrowDownRight, MoreVertical, Bell
+  Users, GraduationCap, FileBarChart, Plus, Wallet, Bell, BookOpen, Clock, Edit3
 } from 'lucide-react';
 import StatCard from "../ui/StatCard";
 import { Button } from '../ui/Button';
@@ -13,14 +12,20 @@ import { Toast } from '@capacitor/toast';
 import { InviteTeacherForm } from '../ui/InviteTeacherForm';
 import { LoadingScreen } from '../ui/LoadingScreen';
 import { API_BASE_URL as API } from '../config/api';
-import { useAppSelector } from '../../store/hooks';
+import { useAppSelector, useAppDispatch } from '../../store/hooks';
+import { setSchoolData } from "../../store/slices/authSlice"
+import { AddSchoolGradeForm } from '../ui/AddSchoolGradeForm';
+import { StartAcademicYearForm } from '../ui/StartAcademicYearForm';
+import { UpdateAcademicYearForm } from '../ui/UpdateAcademicYear';
 export const HeadDashboard: React.FC = () => {
-  const { school } = useAppSelector(state => state.auth)
+  const dispatch = useAppDispatch();
+  const { school, schoolData } = useAppSelector(state => state.auth)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [showAddGradeModal, setShowAddGradeModal] = useState(false);
+  const [showStartAcademicYearModal, setShowStartAcademicYearModal] = useState(false);
+  const [showUpdateYearModal, setShowUpdateYearModal] = useState(false);
   // Modal State
   const [showAdmissionModal, setShowAdmissionModal] = useState(false);
-  const [data, setData] = useState({ teachers: "Loading...", students: "Loading..." })
   const [showInviteTeacherModal, setShowInviteTeacherModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -50,6 +55,31 @@ export const HeadDashboard: React.FC = () => {
       position: "bottom",
     })
   }
+  const handleAddGradeSuccess = async () => {
+    setShowAddGradeModal(false);
+    await Toast.show({
+      text: "Grade added successfully!",
+      duration: "short",
+      position: "bottom",
+    })
+  }
+  const handleStartYearSuccess = async () => {
+    setShowStartAcademicYearModal(false);
+    await Toast.show({
+      text: "Academic year started!",
+      duration: "short",
+      position: "bottom",
+    })
+  }
+
+  const handleUpdateYearSuccess = async () => {
+    setShowUpdateYearModal(false);
+    await Toast.show({
+      text: "Academic year modified!",
+      duration: "short",
+      position: "bottom",
+    })
+  }
   const fetchDashboard = async () => {
     setIsLoading(true)
     const req = await fetch(`${API}/schoolhead/dashboard`, {
@@ -59,7 +89,7 @@ export const HeadDashboard: React.FC = () => {
     });
     const res = await req.json();
     if (res.success) {
-      setData(res.data);
+      dispatch(setSchoolData(res.data));
       Toast.show({
         text: res.message,
         duration: "short",
@@ -69,9 +99,11 @@ export const HeadDashboard: React.FC = () => {
     setIsLoading(false)
   }
   useEffect(() => {
-    fetchDashboard()
+    if (schoolData == null) {
+      fetchDashboard();
+    }
   }, [])
-  
+
 
   if (isLoading) {
     return <LoadingScreen variant="light" message="Loading Dashboard" type="simple" />
@@ -84,15 +116,14 @@ export const HeadDashboard: React.FC = () => {
       <Sidebar
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
+        activeTab="dashboard"
       />
 
       {/* Main Content Area */}
       <main className="flex-1 min-w-0 flex flex-col h-[100dvh] overflow-hidden">
 
         {/* Reusable TopBar Component */}
-        <TopBar onMenuClick={() => setIsSidebarOpen(true)} />
+        <TopBar onMenuClick={() => setIsSidebarOpen(true)} subtitle={"Dashboard"} />
 
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-8 pb-24">
@@ -125,13 +156,13 @@ export const HeadDashboard: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <StatCard
               title="Total Students"
-              value={data.students}
+              value={schoolData != null ? schoolData.students : "loading..."}
               icon={GraduationCap}
               color="bg-blue-500 text-blue-600"
             />
             <StatCard
               title="Total Staff"
-              value={data.teachers}
+              value={schoolData != null ? schoolData.teachers : "loading..."}
               icon={Users}
               color="bg-purple-500 text-purple-600"
             />
@@ -149,37 +180,30 @@ export const HeadDashboard: React.FC = () => {
             />
           </div>
 
-          {/* Content Split: Main + Side */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-            {/* Left Column (Charts/Tables) */}
-            <div className="lg:col-span-2 space-y-8">
-
-              {/* Quick Actions */}
-              <div>
-                <h3 className="text-lg font-bold text-slate-900 mb-4">Quick Actions</h3>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  {[
-                    { label: 'Add Student', icon: Plus, color: 'bg-indigo-50 text-indigo-600', onClick: () => setShowAdmissionModal(true) },
-                    { label: 'Collect Fee', icon: Banknote, color: 'bg-emerald-50 text-emerald-600', onClick: () => { } },
-                    { label: 'Send Notice', icon: Bell, color: 'bg-amber-50 text-amber-600', onClick: () => { } },
-                    { label: 'Add Staff', icon: Users, color: 'bg-pink-50 text-pink-600', onClick: () => setShowInviteTeacherModal(true) },
-                  ].map((action, idx) => (
-                    <button
-                      key={idx}
-                      onClick={action.onClick}
-                      className="flex flex-col items-center justify-center p-4 bg-white border border-slate-200 rounded-xl hover:border-indigo-300 hover:shadow-md transition-all group"
-                    >
-                      <div className={`p-3 rounded-full ${action.color} mb-3 group-hover:scale-110 transition-transform`}>
-                        <action.icon className="w-6 h-6" />
-                      </div>
-                      <span className="text-sm font-semibold text-slate-700 group-hover:text-slate-900">{action.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
+          {/* Quick Actions */}
+          <div>
+            <h3 className="text-lg font-bold text-slate-900 mb-4">Quick Actions</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-4">
+              {[
+                { label: 'Add Student', icon: Plus, color: 'bg-indigo-50 text-indigo-600', onClick: () => setShowAdmissionModal(true) },
+                { label: 'Add Grade', icon: BookOpen, color: 'bg-emerald-50 text-emerald-600', onClick: () => setShowAddGradeModal(true) },
+                { label: 'Start Session', icon: Clock, color: 'bg-blue-50 text-blue-600', onClick: () => setShowStartAcademicYearModal(true) },
+                { label: 'Update Session', icon: Edit3, color: 'bg-cyan-50 text-cyan-600', onClick: () => setShowUpdateYearModal(true) },
+                { label: 'Add Staff', icon: Users, color: 'bg-pink-50 text-pink-600', onClick: () => setShowInviteTeacherModal(true) },
+                { label: 'Send Notice', icon: Bell, color: 'bg-amber-50 text-amber-600', onClick: () => { } },
+              ].map((action, idx) => (
+                <button
+                  key={idx}
+                  onClick={action.onClick}
+                  className="flex flex-col items-center justify-center p-4 bg-white border border-slate-200 rounded-xl hover:border-indigo-300 hover:shadow-md transition-all group"
+                >
+                  <div className={`p-3 rounded-full ${action.color} mb-3 group-hover:scale-110 transition-transform`}>
+                    <action.icon className="w-6 h-6" />
+                  </div>
+                  <span className="text-sm font-semibold text-slate-700 group-hover:text-slate-900 whitespace-nowrap">{action.label}</span>
+                </button>
+              ))}
             </div>
-
           </div>
 
         </div>
@@ -210,7 +234,41 @@ export const HeadDashboard: React.FC = () => {
           onCancel={() => setShowInviteTeacherModal(false)}
         />
       </Modal>
-
+      <Modal
+        isOpen={showAddGradeModal}
+        onClose={() => setShowAddGradeModal(false)}
+        title="Add School Grade"
+        maxWidth="md"
+      >
+        <AddSchoolGradeForm
+          onSuccess={handleAddGradeSuccess}
+          onCancel={() => setShowAddGradeModal(false)}
+        />
+      </Modal>
+      {/* Start Academic Year Modal */}
+      <Modal
+        isOpen={showStartAcademicYearModal}
+        onClose={() => setShowStartAcademicYearModal(false)}
+        title="Start Academic Year"
+        maxWidth="md"
+      >
+        <StartAcademicYearForm
+          onSuccess={handleStartYearSuccess}
+          onCancel={() => setShowStartAcademicYearModal(false)}
+        />
+      </Modal>
+      {/* Update Academic Year Modal */}
+      <Modal
+        isOpen={showUpdateYearModal}
+        onClose={() => setShowUpdateYearModal(false)}
+        title="Update Academic Year"
+        maxWidth="md"
+      >
+        <UpdateAcademicYearForm
+          onSuccess={handleUpdateYearSuccess}
+          onCancel={() => setShowUpdateYearModal(false)}
+        />
+      </Modal>
     </div>
   );
 };
