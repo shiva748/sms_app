@@ -7,7 +7,7 @@ import {
 import { Button } from '../ui/Button';
 import { useAppSelector, useAppDispatch } from '../../store/hooks';
 import { API_BASE_URL, FILE_BASE_URL } from '../config/api';
-import { setRole, setSchool } from '../../store/slices/authSlice';
+import { setProfile, setRole, setSchool } from '../../store/slices/authSlice';
 import { notify } from '../../services/utils';
 
 // Background Icons
@@ -57,6 +57,7 @@ export const HeadProfileSelection: React.FC = ({ back }) => {
       }
       dispatch(setRole("SCHOOL_HEAD"));
       dispatch(setSchool(profile.school));
+      dispatch(setProfile(profile))
       navigate('/');
     } else {
       notify(`Cannot access account (${profile.status})`)

@@ -31,6 +31,7 @@ export type AuthState = {
   role: "SCHOOL_HEAD" | "TEACHER" | "PARENT" | null;
   school: any | null;
   schoolData: SchoolData | null;
+  profile: any | null,
   token: string | null;
 };
 
@@ -40,6 +41,7 @@ const initialState: AuthState = {
   authenticated: false,
   user: null,
   role: null,
+  profile: null,
   school: null,
   token: null,
   schoolData: null
@@ -69,7 +71,9 @@ const authSlice = createSlice({
     setToken(state, action: PayloadAction<string>) {
       state.token = action.payload;
     },
-
+    setProfile(state, action: PayloadAction<any>) {
+      state.profile = action.payload;
+    },
     setAuthenticated(state, action: PayloadAction<boolean>) {
       state.authenticated = action.payload;
     },
@@ -80,6 +84,7 @@ const authSlice = createSlice({
       state.school = null;
       state.token = null;
       state.authenticated = false;
+      this.profile = null;
       state.schoolData = null
     },
   },
@@ -95,6 +100,7 @@ export const {
   setAuthenticated,
   setSchoolData,
   logout,
+  setProfile
 } = authSlice.actions;
 
 export default authSlice.reducer;

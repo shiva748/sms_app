@@ -49,7 +49,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       navigate('/login'); // still go back even if API fails
     }
   };
-  const { user, school } = useAppSelector((state) => state.auth)
+  const { user, school, profile } = useAppSelector((state) => state.auth)
   const navigate = useNavigate();
 
   const menuItems = [
@@ -135,7 +135,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-white truncate">{user.name}</p>
-              <p className="text-xs text-slate-400 truncate">School Head</p>
+              <p className="text-xs text-slate-400 truncate">{profile.designation}</p>
             </div>
           </div>
 

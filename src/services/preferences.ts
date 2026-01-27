@@ -8,6 +8,7 @@ import {
   setSchool,
   setToken,
   setAuthenticated,
+  setProfile
 } from "../store/slices/authSlice";
 
 const AUTH_KEY = "auth_state";
@@ -58,6 +59,7 @@ export const syncAuthFromStorageToRedux = async (dispatch: AppDispatch) => {
   if (saved.role) dispatch(setRole(saved.role));
   if (saved.school) dispatch(setSchool(saved.school));
   if (saved.token) dispatch(setToken(saved.token));
+  if (saved.profile) dispatch(setProfile(saved.profile))
   if (saved.authenticated) {
     dispatch(setAuthenticated(true));
   }
@@ -82,6 +84,7 @@ export const autoPersistAuthState = (store: Store<RootState>) => {
         role: nextState.role,
         school: nextState.school,
         token: nextState.token,
+        profile: nextState.profile
       });
     }
   });
