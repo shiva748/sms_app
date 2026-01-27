@@ -8,9 +8,9 @@ import {
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
 import { API_BASE_URL as API } from '../config/api';
-import { Toast } from '@capacitor/toast';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { setUser } from '../..//store/slices/authSlice';
+import { notify } from '../../services/utils';
 
 // Background Icons (Consistent with other auth screens)
 const bgIcons = [
@@ -81,7 +81,7 @@ const SelectInput: React.FC<SelectProps> = ({ label, icon, options, error, class
 };
 
 export const SchoolRegistration: React.FC = () => {
-  const {user}= useAppSelector((state)=> state.auth)
+  const { user } = useAppSelector((state) => state.auth)
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -224,27 +224,14 @@ export const SchoolRegistration: React.FC = () => {
       })
       const res = await req.json();
       if (res.success) {
-        await Toast.show({
-          text: res.message,
-          duration: "short",
-          position: "bottom",
-        });
-        dispatch(setUser({...user, schoolHeads:[...user.schoolHeads, res.data]}));
+        notify(res.message);
+        dispatch(setUser({ ...user, schoolHeads: [...user.schoolHeads, res.data] }));
         navigate("/head/select-profile")
       } else {
-        await Toast.show({
-          text: res.message,
-          duration: "short",
-          position: "bottom",
-        });
+        notify(res.message);
       }
     } catch (error) {
-      console.log(error);
-       await Toast.show({
-          text: error.message,
-          duration: "short",
-          position: "bottom",
-        });
+      notify(error.message)
     }
     setIsLoading(false);
   };

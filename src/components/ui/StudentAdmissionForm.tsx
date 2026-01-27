@@ -7,7 +7,7 @@ import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
 import { API_BASE_URL as API } from '../config/api';
 import { useAppSelector } from '../../store/hooks';
-import { Toast } from '@capacitor/toast';
+import { notify } from '../../services/utils';
 
 export interface StudentFormData {
   name: string;
@@ -139,16 +139,12 @@ export const StudentAdmissionForm: React.FC<StudentAdmissionFormProps> = ({
         if (res.success) {
           onSuccess();
         } else {
-          await Toast.show({
-            text: res.message,
-            position: "bottom",
-            duration: "short"
-          })
+          notify(res.message)
           setErrors({ ...errors, ...res.data, dateOfBirth: res.dateOfBirth || res.isStudentAgeValid })
         }
       } catch (error) {
         console.error("Admission failed:", error);
-        alert("Failed to admit student. Please try again.");
+        notify("Failed to admit student. Please try again.");
       } finally {
         setIsLoading(false);
       }

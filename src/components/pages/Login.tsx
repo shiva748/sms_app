@@ -8,9 +8,9 @@ import {
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
 import { StudentAvatar } from '../ui/StudentAvatar';
-import { Toast } from '@capacitor/toast';
 import { useAppDispatch } from '../../store/hooks';
 import { setAuthenticated, setUser } from '../../store/slices/authSlice';
+import { notify } from '../../services/utils';
 
 // Background Icons Configuration
 const bgIcons = [
@@ -100,21 +100,13 @@ export const Login: React.FC = () => {
           credentials: "include",
         })
         let profileData = await profileReq.json();
-        await Toast.show({
-          text: "Login Successfull",
-          duration: "short",
-          position: "bottom",
-        });
+        notify("Login Successfull!")
         dispatch(setAuthenticated(true));
         dispatch(setUser(profileData.data));
         navigate('/', { replace: true });
       } else {
         setErrors({ ...errors, ...res.data })
-        await Toast.show({
-          text: res.message,
-          duration: "short",
-          position: "bottom",
-        });
+        notify(res.message);
       }
     } catch (error) {
       alert(error)

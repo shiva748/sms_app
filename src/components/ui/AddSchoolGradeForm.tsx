@@ -3,7 +3,7 @@ import { Save, ChevronDown, BookOpen } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { API_BASE_URL as API } from '../config/api';
 import { useAppSelector, useAppDispatch } from '../../store/hooks';
-import { Toast } from '@capacitor/toast';
+import { notify } from '../../services/utils';
 import { setSchoolData } from '../../store/slices/authSlice';
 
 // Grade Enum Mapping
@@ -45,11 +45,7 @@ export const AddSchoolGradeForm: React.FC<AddSchoolGradeFormProps> = ({ onSucces
             setError('Please select a grade to add');
             return;
         } else if (schoolData.grades.some((element) => element.grade === grade)) {
-            await Toast.show({
-                text: "Grade already exists.",
-                position: "bottom",
-                duration: "short"
-            })
+            notify("Grade already exists.");
         }
         else {
             setIsLoading(true);
@@ -68,18 +64,10 @@ export const AddSchoolGradeForm: React.FC<AddSchoolGradeFormProps> = ({ onSucces
                     dispatch(setSchoolData({ ...schoolData, grades: [...schoolData.grades, res.data] }))
                     onSuccess();
                 } else {
-                    await Toast.show({
-                        text: res.message,
-                        position: "bottom",
-                        duration: "short"
-                    })
+                    notify(res.message);
                 }
             } catch (error) {
-                await Toast.show({
-                    text: "Failed to add Grade!",
-                    position: "bottom",
-                    duration: "short"
-                })
+                notify("Failed to add Grade!")
             } finally {
                 setIsLoading(false);
             }

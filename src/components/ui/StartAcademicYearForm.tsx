@@ -5,7 +5,7 @@ import { Button } from '../ui/Button';
 import { API_BASE_URL as API } from '../config/api';
 import { useAppSelector, useAppDispatch } from '../../store/hooks';
 import { setSchoolData } from '../../store/slices/authSlice';
-import { Toast } from '@capacitor/toast';
+import { notify } from "../../services/utils"
 interface StartAcademicYearFormProps {
   onSuccess?: () => void;
   onCancel: () => void;
@@ -41,18 +41,10 @@ export const StartAcademicYearForm: React.FC<StartAcademicYearFormProps> = ({ on
         dispatch(setSchoolData({ ...schoolData, academicYear: res.data }))
         onSuccess();
       } else {
-        await Toast.show({
-          text: res.message,
-          position: "bottom",
-          duration: "short"
-        })
+        notify(res.message)
       }
     } catch (error) {
-      await Toast.show({
-        text: "Failed to start Academic session!",
-        position: "bottom",
-        duration: "short"
-      })
+      notify("Failed to start Academic session!")
     } finally {
       setIsLoading(false);
     }

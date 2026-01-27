@@ -5,10 +5,10 @@ import {
   School, BookOpen, Users, ArrowRight, ChevronLeft,
   Book, PenTool, GraduationCap, Calculator, Ruler, Globe, Microscope, Backpack, Library, Briefcase
 } from 'lucide-react';
-import { Toast } from '@capacitor/toast';   // optional, but nice UX
 import { useAppDispatch } from '../../store/hooks';
 import { logout } from '../../store/slices/authSlice';
 import { API_BASE_URL as API } from '../config/api';
+import { notify } from '../../services/utils';
 import { LogoutModal } from '../ui/LogoutModal';
 
 // Background Icons Configuration (Same as others for consistency)
@@ -73,11 +73,7 @@ const handleLogout = async () => {
 
     dispatch(logout()); // clear redux state
 
-    await Toast.show({
-      text: "Logged out",
-      duration: "short",
-      position: "bottom",
-    });
+    notify("Logged Out!");
 
     navigate('/login'); // go to Entry screen
 

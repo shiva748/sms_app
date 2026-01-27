@@ -6,8 +6,8 @@ import {
 } from 'lucide-react';
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
-import { Toast } from '@capacitor/toast';
 import { API_BASE_URL as API } from '../config/api';
+import { notify } from '../../services/utils';
 
 // Reuse the same background configuration for consistency
 const bgIcons = [
@@ -104,19 +104,11 @@ export const Register: React.FC = () => {
       })
       let res = await req.json();
       if (res.success) {
-        await Toast.show({
-          text: res.message,
-          duration: "short",
-          position: "bottom",
-        });
+        notify(res.message);
         navigate('/login', { replace: true });
       } else {
         setErrors({ ...errors, ...res.data });
-        await Toast.show({
-          text: res.message,
-          duration: "short",
-          position: "bottom",
-        });
+        notify(res.message);
       }
     } catch (error) {
       alert(error)

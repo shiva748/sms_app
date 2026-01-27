@@ -7,8 +7,8 @@ import {
 import { Button } from '../ui/Button';
 import { useAppSelector, useAppDispatch } from '../../store/hooks';
 import { API_BASE_URL, FILE_BASE_URL } from '../config/api';
-import { Toast } from '@capacitor/toast';
 import { setRole, setSchool } from '../../store/slices/authSlice';
+import { notify } from '../../services/utils';
 
 // Background Icons
 const bgIcons = [
@@ -52,22 +52,14 @@ export const HeadProfileSelection: React.FC = ({ back }) => {
   const handleSelectProfile = async (profile: any) => {
     if (profile.status === 'ACTIVE') {
       if (profile.school.status !== 'ACTIVE') {
-        await Toast.show({
-          text: `School is not ACTIVE`,
-          duration: "short",
-          position: "bottom"
-        })
+        notify(`School is not ACTIVE`)
         return;
       }
       dispatch(setRole("SCHOOL_HEAD"));
       dispatch(setSchool(profile.school));
       navigate('/');
     } else {
-      await Toast.show({
-        text: `Cannot access account (${profile.status})`,
-        duration: "short",
-        position: "bottom"
-      })
+      notify(`Cannot access account (${profile.status})`)
     }
   };
 

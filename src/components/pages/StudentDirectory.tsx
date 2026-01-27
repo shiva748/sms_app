@@ -147,22 +147,35 @@ export const StudentDirectory: React.FC = () => {
   };
 
   const clearFilters = () => {
-    setFilters({ name: '', status: '', grade: '', section: '' });
-    handleSearch()
+    const clearedFilters = {
+      name: '',
+      status: '',
+      grade: '',
+      section: ''
+    };
+
+    setFilters(clearedFilters);
+    handleSearch(true, clearedFilters);
   };
 
-  const handleSearch = async (resetPage = false) => {
+
+  const handleSearch = async (
+    resetPage = false,
+    overrideFilters = filters
+  ) => {
     setIsSearching(true);
+
     const pageToFetch = resetPage ? 1 : currentPage;
     if (resetPage) setCurrentPage(1);
+
     const req = await fetch(
       `${API}/schools/${school.id}/students/search` +
       `?page=${pageToFetch}` +
       `&size=${itemsPerPage}` +
-      `&name=${filters.name}` +
-      `&gradeId=${filters.grade || ""}` +
-      `&sectionId=${filters.section || ""}` +
-      `&status=${filters.status || ""}`,
+      `&name=${overrideFilters.name}` +
+      `&gradeId=${overrideFilters.grade || ""}` +
+      `&sectionId=${overrideFilters.section || ""}` +
+      `&status=${overrideFilters.status || ""}`,
       {
         method: "GET",
         credentials: "include",
@@ -175,8 +188,10 @@ export const StudentDirectory: React.FC = () => {
       setDisplayedStudents(res.data.students);
       setTotalItems(res.data.totalItems);
     }
-    setIsSearching(false)
+
+    setIsSearching(false);
   };
+
   useEffect(() => {
     handleSearch();
   }, [currentPage, itemsPerPage]);
@@ -303,10 +318,10 @@ export const StudentDirectory: React.FC = () => {
                       value={filters.section}
                       onChange={(e) => handleFilterChange('section', e.target.value)}
                     >
-                      <option value="">All Sections</option>
-                      {['A', 'B', 'C', 'D', 'Science', 'Commerce', 'Arts'].map(sec => (
-                        <option key={sec} value={sec}>{sec}</option>
-                      ))}
+                      {filters.grade == '' ? <option value="">Select a grade first</option> : <><option value="">All Sections</option>
+                        {schoolData.sections.filter((s) => s.gradeId == filters.grade).map(sec => (
+                          <option key={sec.id} value={sec.id}>{sec.name}</option>
+                        ))}</>}
                     </select>
                     <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                   </div>

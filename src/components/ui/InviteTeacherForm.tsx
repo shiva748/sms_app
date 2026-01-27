@@ -4,7 +4,7 @@ import {
 } from 'lucide-react';
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
-import { Toast } from '@capacitor/toast';
+import { notify } from '../../services/utils';
 import { API_BASE_URL as API } from '../config/api';
 import { useAppSelector } from '../../store/hooks';
 
@@ -77,11 +77,7 @@ export const InviteTeacherForm: React.FC<InviteTeacherFormProps> = ({
         if (res.success) {
           onSuccess();
         } else {
-          await Toast.show({
-            text: res.message,
-            position: "bottom",
-            duration: "short"
-          })
+          notify(res.message)
           setErrors({ ...errors, ...res.data, dateOfBirth: res.dateOfBirth || res.isStudentAgeValid })
         }
       } catch (error) {

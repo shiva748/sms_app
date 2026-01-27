@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ShieldAlert, Save, AlertCircle, ChevronDown, FileText } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { API_BASE_URL as API } from '../config/api';
-import { Toast } from '@capacitor/toast';
+import { notify } from '../../services/utils';
 interface UpdateStudentStatusFormProps {
     studentName: string;
     currentStatus: string;
@@ -53,11 +53,7 @@ export const UpdateStudentStatusForm: React.FC<UpdateStudentStatusFormProps> = (
             if (res.success) {
                 onSuccess(res.data);
             }
-            await Toast.show({
-                text: res.message,
-                position: "bottom",
-                duration: "short"
-            })
+            notify(res.message)
 
         } catch (error) {
             console.error("Admission failed:", error);

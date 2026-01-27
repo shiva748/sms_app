@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Users, GraduationCap, FileBarChart, Plus, Wallet, Bell, BookOpen, Clock, Edit3
+  Users, GraduationCap, FileBarChart, Plus, Wallet, Bell, BookOpen, Clock, Edit3, Layers
 } from 'lucide-react';
 import StatCard from "../ui/StatCard";
 import { Button } from '../ui/Button';
@@ -8,7 +8,6 @@ import { Sidebar } from '../ui/Sidebar';
 import { TopBar } from '../ui/TopBar';
 import { Modal } from '../ui/Modal';
 import { StudentAdmissionForm } from '../ui/StudentAdmissionForm';
-import { Toast } from '@capacitor/toast';
 import { InviteTeacherForm } from '../ui/InviteTeacherForm';
 import { LoadingScreen } from '../ui/LoadingScreen';
 import { API_BASE_URL as API } from '../config/api';
@@ -17,11 +16,14 @@ import { setSchoolData } from "../../store/slices/authSlice"
 import { AddSchoolGradeForm } from '../ui/AddSchoolGradeForm';
 import { StartAcademicYearForm } from '../ui/StartAcademicYearForm';
 import { UpdateAcademicYearForm } from '../ui/UpdateAcademicYear';
+import { AddGradeSectionForm } from '../ui/AddGradeSectionForm';
+import { notify } from '../../services/utils';
 export const HeadDashboard: React.FC = () => {
   const dispatch = useAppDispatch();
   const { school, schoolData } = useAppSelector(state => state.auth)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showAddGradeModal, setShowAddGradeModal] = useState(false);
+  const [showAddSectionModal, setShowAddSectionModal] = useState(false);
   const [showStartAcademicYearModal, setShowStartAcademicYearModal] = useState(false);
   const [showUpdateYearModal, setShowUpdateYearModal] = useState(false);
   // Modal State
@@ -40,45 +42,29 @@ export const HeadDashboard: React.FC = () => {
   const handleAdmissionSuccess = async () => {
     setShowAdmissionModal(false);
     // In a real app, you would likely trigger a data refresh here
-    await Toast.show({
-      text: "Student admitted successfully.",
-      duration: "short",
-      position: "bottom",
-    })
+    notify("Student admitted successfully.")
   };
 
   const handleInviteTeacherSuccess = async () => {
     setShowInviteTeacherModal(false);
-    await Toast.show({
-      text: "Teacher invitation sent successfully!",
-      duration: "short",
-      position: "bottom",
-    })
+    notify("Teacher invitation sent successfully!")
   }
   const handleAddGradeSuccess = async () => {
     setShowAddGradeModal(false);
-    await Toast.show({
-      text: "Grade added successfully!",
-      duration: "short",
-      position: "bottom",
-    })
+    notify("Grade added successfully!")
   }
   const handleStartYearSuccess = async () => {
     setShowStartAcademicYearModal(false);
-    await Toast.show({
-      text: "Academic year started!",
-      duration: "short",
-      position: "bottom",
-    })
+    notify("Academic year started!")
   }
 
   const handleUpdateYearSuccess = async () => {
     setShowUpdateYearModal(false);
-    await Toast.show({
-      text: "Academic year modified!",
-      duration: "short",
-      position: "bottom",
-    })
+    notify("Academic year modified!")
+  }
+  const handleAddSectionSuccess = async () => {
+    setShowAddSectionModal(false);
+    notify("Section added successfully!")
   }
   const fetchDashboard = async () => {
     setIsLoading(true)
@@ -90,11 +76,7 @@ export const HeadDashboard: React.FC = () => {
     const res = await req.json();
     if (res.success) {
       dispatch(setSchoolData(res.data));
-      Toast.show({
-        text: res.message,
-        duration: "short",
-        position: "bottom"
-      })
+      notify(res.message)
     }
     setIsLoading(false)
   }
@@ -185,11 +167,12 @@ export const HeadDashboard: React.FC = () => {
             <h3 className="text-lg font-bold text-slate-900 mb-4">Quick Actions</h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-4">
               {[
-                { label: 'Add Student', icon: Plus, color: 'bg-indigo-50 text-indigo-600', onClick: () => setShowAdmissionModal(true) },
-                { label: 'Add Grade', icon: BookOpen, color: 'bg-emerald-50 text-emerald-600', onClick: () => setShowAddGradeModal(true) },
                 { label: 'Start Session', icon: Clock, color: 'bg-blue-50 text-blue-600', onClick: () => setShowStartAcademicYearModal(true) },
                 { label: 'Update Session', icon: Edit3, color: 'bg-cyan-50 text-cyan-600', onClick: () => setShowUpdateYearModal(true) },
                 { label: 'Add Staff', icon: Users, color: 'bg-pink-50 text-pink-600', onClick: () => setShowInviteTeacherModal(true) },
+                { label: 'Add Student', icon: Plus, color: 'bg-indigo-50 text-indigo-600', onClick: () => setShowAdmissionModal(true) },
+                { label: 'Add Grade', icon: BookOpen, color: 'bg-emerald-50 text-emerald-600', onClick: () => setShowAddGradeModal(true) },
+                { label: 'Add Section', icon: Layers, color: 'bg-pink-50 text-pink-600', onClick: () => setShowAddSectionModal(true) },
                 { label: 'Send Notice', icon: Bell, color: 'bg-amber-50 text-amber-600', onClick: () => { } },
               ].map((action, idx) => (
                 <button
@@ -267,6 +250,17 @@ export const HeadDashboard: React.FC = () => {
         <UpdateAcademicYearForm
           onSuccess={handleUpdateYearSuccess}
           onCancel={() => setShowUpdateYearModal(false)}
+        />
+      </Modal>
+      <Modal
+        isOpen={showAddSectionModal}
+        onClose={() => setShowAddSectionModal(false)}
+        title="Add Grade Section"
+        maxWidth="md"
+      >
+        <AddGradeSectionForm
+          onSuccess={handleAddSectionSuccess}
+          onCancel={() => setShowAddSectionModal(false)}
         />
       </Modal>
     </div>
