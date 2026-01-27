@@ -84,7 +84,7 @@ const authSlice = createSlice({
       state.school = null;
       state.token = null;
       state.authenticated = false;
-      this.profile = null;
+      state.profile = null;
       state.schoolData = null
     },
   },
