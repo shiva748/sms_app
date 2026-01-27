@@ -1,11 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Users, GraduationCap, Banknote, Bus, FileBarChart, Settings,
   X, ChevronRight, LogOut, School, ArrowLeftRight
 } from 'lucide-react';
-import { useAppSelector } from '../../store/hooks';
+import { useAppSelector, useAppDispatch } from '../../store/hooks';
+import { logout } from '../../store/slices/authSlice';
+import { notify } from '../../services/utils';
 import { API_BASE_URL as API, FILE_BASE_URL } from '../config/api';
+import { LogoutModal } from './LogoutModal';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -15,12 +18,37 @@ interface SidebarProps {
   userRole?: string;
   userName?: string;
 }
-
 export const Sidebar: React.FC<SidebarProps> = ({
   isOpen,
   onClose,
   activeTab,
 }) => {
+  const dispatch = useAppDispatch();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  const handleLogoutConfirm = () => {
+    setShowLogoutModal(false);
+    handleLogout()
+  };
+  const handleLogout = async () => {
+    try {
+      await fetch(`${API}/auth/logout`, {
+        method: "GET",
+        credentials: "include",
+      });
+
+      dispatch(logout()); // clear redux state
+
+      notify("Logged Out!");
+
+      navigate('/login'); // go to Entry screen
+
+    } catch (error) {
+      dispatch(logout());
+      console.error("Logout failed:", error);
+      navigate('/login'); // still go back even if API fails
+    }
+  };
   const { user, school } = useAppSelector((state) => state.auth)
   const navigate = useNavigate();
 
@@ -50,6 +78,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
         pb-[env(safe-area-inset-bottom)]
         ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
+        <LogoutModal
+          isOpen={showLogoutModal}
+          onClose={() => setShowLogoutModal(false)}
+          onConfirm={handleLogoutConfirm}
+        />
         {/* Sidebar Header - Added safe-area-inset-top support */}
         <div className="px-6 pb-6 pt-[calc(1.5rem+env(safe-area-inset-top))] flex items-center gap-3 border-b border-slate-800">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
@@ -116,7 +149,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               Switch Role
             </button>
             <button
-              onClick={() => navigate('/login')}
+              onClick={() => setShowLogoutModal(true)}
               className="flex items-center justify-center gap-2 p-2.5 text-red-400 hover:text-white hover:bg-red-500/10 rounded-lg text-xs font-medium transition-colors border border-transparent hover:border-red-500/20"
               title="Sign Out"
             >

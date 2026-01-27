@@ -56,8 +56,7 @@ export const UpdateStudentStatusForm: React.FC<UpdateStudentStatusFormProps> = (
             notify(res.message)
 
         } catch (error) {
-            console.error("Admission failed:", error);
-            alert("Failed to admit student. Please try again.");
+            notify("Failed to admit student. Please try again.");
         } finally {
             setIsLoading(false);
         }

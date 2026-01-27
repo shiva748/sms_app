@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Dialog } from "@capacitor/dialog";
-import { 
+import {
   School, BookOpen, Users, ArrowRight, ChevronLeft,
   Book, PenTool, GraduationCap, Calculator, Ruler, Globe, Microscope, Backpack, Library, Briefcase
 } from 'lucide-react';
@@ -34,7 +34,7 @@ interface RoleCardProps {
 }
 
 const RoleCard: React.FC<RoleCardProps> = ({ icon, title, description, onClick, gradientFrom, gradientTo }) => (
-  <button 
+  <button
     onClick={onClick}
     className="w-full group relative p-4 sm:p-5 rounded-2xl bg-[#131620]/80 border border-slate-800/60 hover:border-slate-600 transition-all duration-300 backdrop-blur-md text-left shadow-lg hover:shadow-xl hover:scale-[1.02] flex items-center gap-4 mb-4"
   >
@@ -42,7 +42,7 @@ const RoleCard: React.FC<RoleCardProps> = ({ icon, title, description, onClick, 
     <div className={`p-3.5 rounded-xl bg-gradient-to-br ${gradientFrom} ${gradientTo} text-white shadow-lg shadow-indigo-900/20 group-hover:shadow-indigo-500/30 transition-shadow duration-300`}>
       {icon}
     </div>
-    
+
     {/* Text Content */}
     <div className="flex-1">
       <h3 className="text-white font-bold text-sm sm:text-base mb-1 tracking-wide">{title}</h3>
@@ -56,33 +56,33 @@ const RoleCard: React.FC<RoleCardProps> = ({ icon, title, description, onClick, 
   </button>
 );
 
-export const RoleSelection: React.FC = ({back}) => {
+export const RoleSelection: React.FC = ({ back }) => {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-const handleLogoutConfirm = () => {
+  const handleLogoutConfirm = () => {
     setShowLogoutModal(false);
     handleLogout()
   };
-const handleLogout = async () => {
-  try {
-    await fetch(`${API}/auth/logout`, {
-      method: "GET",
-      credentials: "include",
-    });
+  const handleLogout = async () => {
+    try {
+      await fetch(`${API}/auth/logout`, {
+        method: "GET",
+        credentials: "include",
+      });
 
-    dispatch(logout()); // clear redux state
+      dispatch(logout()); // clear redux state
 
-    notify("Logged Out!");
+      notify("Logged Out!");
 
-    navigate('/login'); // go to Entry screen
+      navigate('/login'); // go to Entry screen
 
-  } catch (error) {
-    dispatch(logout());
-    console.error("Logout failed:", error);
-    navigate('/login'); // still go back even if API fails
-  }
-};
+    } catch (error) {
+      dispatch(logout());
+      console.error("Logout failed:", error);
+      navigate('/login'); // still go back even if API fails
+    }
+  };
 
   // Handle body background color
   useEffect(() => {
@@ -93,16 +93,16 @@ const handleLogout = async () => {
   }, []);
 
   const handleRoleSelect = (role: string) => {
-    if(role === "head"){
+    if (role === "head") {
       navigate("/head/select-profile");
-    }else if(role === "teacher"){
+    } else if (role === "teacher") {
       navigate("/teacher/select-profile")
     }
   };
 
   return (
     <div className="fixed inset-0 w-screen h-[100dvh] flex flex-col bg-[#0a0e17] overflow-hidden font-sans">
-      <LogoutModal 
+      <LogoutModal
         isOpen={showLogoutModal}
         onClose={() => setShowLogoutModal(false)}
         onConfirm={handleLogoutConfirm}
@@ -121,7 +121,7 @@ const handleLogout = async () => {
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-indigo-900/20 rounded-full blur-[100px]" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-900/20 rounded-full blur-[100px]" />
-        
+
         {bgIcons.map((item, index) => (
           <div
             key={index}
@@ -143,8 +143,8 @@ const handleLogout = async () => {
 
       {/* Navigation Bar */}
       <div className="absolute top-9 left-2 z-50 p-2 flex justify-between items-center max-w mx-auto w-full">
-        <button 
-          onClick={() => {back?navigate(back):setShowLogoutModal(true)}}
+        <button
+          onClick={() => { back ? navigate(back) : setShowLogoutModal(true) }}
           className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-full transition-all"
         >
           <ChevronLeft className="w-6 h-6" />
@@ -155,14 +155,14 @@ const handleLogout = async () => {
       {/* Main Content */}
       <div className="w-full h-full overflow-y-auto overflow-x-hidden flex flex-col relative z-10">
         <div className="w-full max-w-md flex flex-col m-auto p-6 py-20">
-          
+
           <div className="text-center mb-10">
             <h1 className="text-3xl font-bold text-white mb-2">Who are you?</h1>
             <p className="text-slate-400 text-sm">Choose your role to access the portal.</p>
           </div>
 
           <div className="space-y-4">
-            <RoleCard 
+            <RoleCard
               title="School Head"
               description="Access administration & analytics"
               icon={<Briefcase className="w-6 h-6" />}
@@ -170,8 +170,8 @@ const handleLogout = async () => {
               gradientTo="to-indigo-600"
               onClick={() => handleRoleSelect('head')}
             />
-            
-            <RoleCard 
+
+            <RoleCard
               title="Teacher"
               description="Manage classes, grades & attendance"
               icon={<BookOpen className="w-6 h-6" />}
@@ -179,8 +179,8 @@ const handleLogout = async () => {
               gradientTo="to-cyan-600"
               onClick={() => handleRoleSelect('teacher')}
             />
-            
-            <RoleCard 
+
+            <RoleCard
               title="Parent / Guardian"
               description="View progress & communicate"
               icon={<Users className="w-6 h-6" />}
@@ -195,7 +195,7 @@ const handleLogout = async () => {
             <p className="text-slate-600 text-[10px] xs:text-xs font-medium mb-2 uppercase tracking-wide">
               Administrator?
             </p>
-            <button 
+            <button
               onClick={() => navigate('/school-registration')}
               className="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-xs sm:text-sm font-semibold transition-colors group"
             >

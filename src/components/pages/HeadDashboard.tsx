@@ -20,7 +20,7 @@ import { AddGradeSectionForm } from '../ui/AddGradeSectionForm';
 import { notify } from '../../services/utils';
 export const HeadDashboard: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { school, schoolData } = useAppSelector(state => state.auth)
+  const { school, schoolData, user } = useAppSelector(state => state.auth)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showAddGradeModal, setShowAddGradeModal] = useState(false);
   const [showAddSectionModal, setShowAddSectionModal] = useState(false);
@@ -76,7 +76,7 @@ export const HeadDashboard: React.FC = () => {
     const res = await req.json();
     if (res.success) {
       dispatch(setSchoolData(res.data));
-      notify(res.message)
+      notify(`Welcome ${user.name}`)
     }
     setIsLoading(false)
   }

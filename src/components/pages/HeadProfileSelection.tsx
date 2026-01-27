@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Building2, ChevronLeft, Plus, CheckCircle2, Clock, Ban, ArrowRight, MapPin,
+  ChevronLeft, Plus, CheckCircle2, Clock, Ban, ArrowRight, MapPin,
   Book, PenTool, GraduationCap, Calculator, Ruler, Globe, Microscope, Backpack, Library, School
 } from 'lucide-react';
 import { Button } from '../ui/Button';

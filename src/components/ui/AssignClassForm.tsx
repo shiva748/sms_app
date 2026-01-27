@@ -4,6 +4,7 @@ import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { useAppSelector } from '../../store/hooks';
 import { notify, formatGrade, gradeOrderMap } from '../../services/utils';
+import { API_BASE_URL as API } from '../config/api';
 interface AssignClassFormProps {
     studentName: string;
     currentGrade?: string;
@@ -14,7 +15,7 @@ interface AssignClassFormProps {
 }
 
 export const AssignClassForm: React.FC<AssignClassFormProps> = ({
-    studentName,
+    student,
     currentGrade = '',
     currentSection = '',
     currentRollNumber = '',
@@ -37,13 +38,29 @@ export const AssignClassForm: React.FC<AssignClassFormProps> = ({
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
+        try {
+            const req = await fetch(`${API}/schools/${school.id}/student/enroll`, {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                    "X-School-Id": school.id,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    studentId: student.id, gradeId: grade, sectionId: section, rollNumber
+                }),
+            })
+            const res = await req.json();
+            if (res.success) {
+                onSuccess(res.data);
+            }
+            notify(res.message)
 
-        // Simulate API call
-        setTimeout(() => {
-            console.log("Assign Class Payload:", { studentName, grade, section, rollNumber });
-            if (onSuccess) onSuccess();
+        } catch (error) {
+            notify("Failed to enroll student. Please try again.");
+        } finally {
             setIsLoading(false);
-        }, 1000);
+        }
     };
 
     const SelectStyles = "w-full px-3 py-2.5 sm:py-3 rounded-xl text-xs xs:text-sm shadow-sm border border-slate-300 text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-brand-200 focus:border-brand-500 hover:border-slate-400 transition-all appearance-none cursor-pointer";
@@ -58,7 +75,7 @@ export const AssignClassForm: React.FC<AssignClassFormProps> = ({
                     <div>
                         <h4 className="text-sm font-bold text-slate-800 mb-1">Class Enrollment</h4>
                         <p className="text-xs text-slate-500 leading-relaxed">
-                            Assigning <strong>{studentName}</strong> to a specific academic class and section.
+                            Assigning <strong>{student.name}</strong> to a specific academic class and section.
                         </p>
                     </div>
                 </div>

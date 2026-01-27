@@ -3,28 +3,9 @@ import { Save, ChevronDown, Layers, AlertCircle } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { useAppSelector, useAppDispatch } from '../../store/hooks';
-import { notify } from '../../services/utils';
+import { notify, gradeOrderMap, formatGrade } from '../../services/utils';
 import { setSchoolData } from '../../store/slices/authSlice';
 import { API_BASE_URL as API } from '../config/api';
-// Mock Data for Grades (In a real app, this would come from an API)
-const gradeOrderMap = {
-    PRE_NURSERY: 0,
-    NURSERY: 1,
-    LKG: 2,
-    UKG: 3,
-    GRADE_1: 4,
-    GRADE_2: 5,
-    GRADE_3: 6,
-    GRADE_4: 7,
-    GRADE_5: 8,
-    GRADE_6: 9,
-    GRADE_7: 10,
-    GRADE_8: 11,
-    GRADE_9: 12,
-    GRADE_10: 13,
-    GRADE_11: 14,
-    GRADE_12: 15,
-};
 
 interface AddGradeSectionFormProps {
     onSuccess?: () => void;
@@ -87,13 +68,6 @@ export const AddGradeSectionForm: React.FC<AddGradeSectionFormProps> = ({ onSucc
         } catch (error) {
 
         }
-    };
-    const formatGrade = (grade) => {
-        return grade
-            .toLowerCase()
-            .split('_')
-            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-            .join(' ');
     };
     return (
         <form onSubmit={handleSubmit} className="w-full">

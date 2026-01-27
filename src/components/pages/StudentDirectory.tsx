@@ -92,10 +92,6 @@ export const StudentDirectory: React.FC = () => {
     section: ''
   });
 
-  useEffect(() => {
-    handleSearch(true)
-  }, []);
-
   const handleTabChange = (tabId: string) => {
     if (tabId === 'dashboard') navigate('/head/dashboard');
     if (tabId === 'students') navigate('/head/students');
@@ -121,7 +117,7 @@ export const StudentDirectory: React.FC = () => {
 
   const handleSuccess = (student) => {
     // If we are in a sub-flow (edit/class/status), return to details
-    if (['edit', 'class', 'status'].includes(modalType || '')) {
+    if (['edit', 'status'].includes(modalType || '')) {
       if (student) {
         setSelectedStudent(student);
         const students = [];
@@ -655,7 +651,7 @@ export const StudentDirectory: React.FC = () => {
           maxWidth="md"
         >
           <AssignClassForm
-            studentName={selectedStudent.name}
+            student={selectedStudent}
             currentGrade={selectedStudent.grade}
             currentSection={selectedStudent.section}
             currentRollNumber={selectedStudent.rollNumber}
