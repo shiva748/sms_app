@@ -116,7 +116,6 @@ export const StudentDirectory: React.FC = () => {
   };
 
   const handleSuccess = (student) => {
-    // If we are in a sub-flow (edit/class/status), return to details
     if (['edit', 'status'].includes(modalType || '')) {
       if (student) {
         setSelectedStudent(student);

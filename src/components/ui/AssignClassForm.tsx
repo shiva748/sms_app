@@ -131,11 +131,6 @@ export const AssignClassForm: React.FC<AssignClassFormProps> = ({
                     value={rollNumber}
                     onChange={(e) => setRollNumber(e.target.value)}
                     icon={<Hash className="w-4 h-4" />}
-                    rightElement={
-                        <div className="pr-3 text-[10px] text-slate-400 font-medium uppercase tracking-wider">
-                            Optional
-                        </div>
-                    }
                 />
             </div>
 

@@ -28,7 +28,7 @@ html, body {
 
 :root,
 body {
-  background-color: #0F172A; /* same as your app bg */
+  background-color: #f8fafc; /* same as your app bg */
 }
 
 /* Make your layout respect + fill safe area */

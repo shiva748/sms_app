@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     User, Phone, Mail, Calendar, ShieldAlert, BookOpen, FileEdit, GraduationCap, Flag
 } from 'lucide-react';
-import { FILE_BASE_URL } from '../config/api';
+import { API_BASE_URL as API, FILE_BASE_URL } from '../config/api';
+import { useAppSelector } from '../../store/hooks';
+import { formatGrade, notify } from '../../services/utils';
 interface StudentDetailViewProps {
     student: any;
     onClose: () => void;
@@ -11,6 +13,7 @@ interface StudentDetailViewProps {
     onUpdateStatus: () => void;
 }
 
+
 export const StudentDetailView: React.FC<StudentDetailViewProps> = ({
     student,
     onClose,
@@ -18,7 +21,25 @@ export const StudentDetailView: React.FC<StudentDetailViewProps> = ({
     onAssignClass,
     onUpdateStatus
 }) => {
+    const { school } = useAppSelector(state => state.auth);
     if (!student) return null;
+    const [academicData, setAcademicData] = useState({});
+    const fetchStudent = async () => {
+        const req = await fetch(`${API}/students/${student.id}/academic`, {
+            method: "GET",
+            credentials: "include",
+            headers: { "X-School-Id": school.id }
+        });
+        const res = await req.json();
+        if (res.success) {
+            setAcademicData(res.data);
+        } else {
+            notify("failed to load student academic");
+        }
+    }
+    useEffect(() => {
+        fetchStudent()
+    }, [])
 
     return (
         <div className="flex flex-col bg-white pb-10">
@@ -84,25 +105,25 @@ export const StudentDetailView: React.FC<StudentDetailViewProps> = ({
                             <span className="text-xs text-slate-400 block mb-1">Current Class</span>
                             <div className="flex items-center gap-2 font-bold text-slate-800">
                                 <GraduationCap className="w-4 h-4 text-indigo-500" />
-                                {student.grade ? `Class ${student.grade}` : 'N/A'}
+                                {academicData.gradeName ? `${formatGrade(academicData.gradeName)}` : 'N/A'}
                             </div>
                         </div>
                         <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
                             <span className="text-xs text-slate-400 block mb-1">Section</span>
                             <div className="font-bold text-slate-800">
-                                {student.section || '-'}
+                                {academicData.sectionName || '-'}
                             </div>
                         </div>
                         <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
                             <span className="text-xs text-slate-400 block mb-1">Roll Number</span>
                             <div className="font-bold text-slate-800">
-                                {student.rollNumber || '-'}
+                                {academicData.rollNumber || '-'}
                             </div>
                         </div>
                         <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
                             <span className="text-xs text-slate-400 block mb-1">Year</span>
                             <div className="font-bold text-slate-800">
-                                {student.session || "N/A"}
+                                {academicData.academicYearName || "N/A"}
                             </div>
                         </div>
                     </div>
@@ -140,7 +161,6 @@ export const StudentDetailView: React.FC<StudentDetailViewProps> = ({
                                 <p className="text-xs text-slate-500">Primary Guardian</p>
                             </div>
                         </div>
-
                         {/* Phone Tile */}
                         <a href={`tel:${student.primaryContactPhone}`} className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100 hover:border-indigo-200 transition-colors">
                             <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-emerald-600 flex-shrink-0">

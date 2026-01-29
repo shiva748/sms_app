@@ -1,297 +1,235 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { API_BASE_URL as API } from '../config/api';
 import {
-  Mail, Lock, Eye, EyeOff, ArrowRight, ChevronLeft,
-  Book, PenTool, GraduationCap, Calculator, Ruler, Globe, Microscope, Backpack, Library
+    Mail, Lock, ArrowRight, Eye, EyeOff, ChevronLeft
 } from 'lucide-react';
+import { notify } from '../../services/utils';
+import { API_BASE_URL as API } from '../config/api';
 import { Input } from '../ui/Input';
-import { Button } from '../ui/Button';
-import { StudentAvatar } from '../ui/StudentAvatar';
 import { useAppDispatch } from '../../store/hooks';
 import { setAuthenticated, setUser } from '../../store/slices/authSlice';
-import { notify } from '../../services/utils';
-
-// Background Icons Configuration
-const bgIcons = [
-  { Icon: Book, top: '10%', left: '10%', size: 48, delay: '0s', duration: '15s', rot: '12deg' },
-  { Icon: PenTool, top: '20%', right: '15%', size: 32, delay: '2s', duration: '12s', rot: '-15deg' },
-  { Icon: GraduationCap, bottom: '15%', left: '20%', size: 64, delay: '1s', duration: '18s', rot: '5deg' },
-  { Icon: Calculator, top: '40%', left: '5%', size: 40, delay: '3s', duration: '20s', rot: '-10deg' },
-  { Icon: Ruler, bottom: '30%', right: '10%', size: 44, delay: '4s', duration: '16s', rot: '45deg' },
-  { Icon: Globe, top: '15%', left: '50%', size: 36, delay: '5s', duration: '22s', rot: '0deg' },
-  { Icon: Microscope, bottom: '10%', left: '80%', size: 52, delay: '2s', duration: '19s', rot: '10deg' },
-  { Icon: Backpack, top: '60%', right: '25%', size: 48, delay: '1s', duration: '14s', rot: '-5deg' },
-  { Icon: Library, bottom: '40%', left: '85%', size: 38, delay: '3s', duration: '17s', rot: '0deg' }
-];
 
 export const Login: React.FC = () => {
-  const dispatch = useAppDispatch();
-  const navigate = useNavigate();
-  const [formData, setFormData] = useState({ email: '', password: '' });
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [showPassword, setShowPassword] = useState(false);
-  const [isPasswordFocused, setIsPasswordFocused] = useState(false);
-  const [isEmailFocused, setIsEmailFocused] = useState(false);
-  const [loading, setLoading] = useState({
-    isLoading: false,
-  });
+    const dispatch = useAppDispatch();
+    const navigate = useNavigate();
+    const [formData, setFormData] = useState({ email: '', password: '' });
+    const [errors, setErrors] = useState<Record<string, string>>({});
+    const [showPassword, setShowPassword] = useState(false);
+    const [isLoading, setLoading] = useState(false);
 
-  // Handle body background color to prevent white bars during mobile scroll/overscroll
-  useEffect(() => {
-    document.body.style.backgroundColor = '#0a0e17';
-    return () => {
-      document.body.style.backgroundColor = '';
+    const validateForm = () => {
+        const newErrors: Record<string, string> = {};
+
+        // Email validation
+        if (!formData.email.trim()) {
+            newErrors.email = "Email is required";
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+            newErrors.email = "Enter a valid email address";
+        }
+
+        // Password validation
+        if (!formData.password) {
+            newErrors.password = "Password is required";
+        } else if (formData.password.length < 8) {
+            newErrors.password = "Password to small";
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
     };
-  }, []);
 
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
 
-    // Email validation
-    if (!formData.email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = "Enter a valid email address";
-    }
+        // Clear specific error when typing
+        if (errors[name]) {
+            setErrors(prev => {
+                const newErrors = { ...prev };
+                delete newErrors[name];
+                return newErrors;
+            });
+        }
+    };
 
-    // Password validation
-    if (!formData.password) {
-      newErrors.password = "Password is required";
-    } else if (formData.password.length < 8) {
-      newErrors.password = "Password to small";
-    }
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+        if (!validateForm()) return;
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+        setLoading(true);
+        try {
+            let req = await fetch(`${API}/auth/login`, {
+                method: "POST",
+                credentials: "include",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(formData),
+            })
+            let res = await req.json();
+            if (res.success) {
+                let profileReq = await fetch(`${API}/user/me`, {
+                    method: "GET",
+                    credentials: "include",
+                })
+                let profileData = await profileReq.json();
+                notify("Login Successfull!")
+                dispatch(setAuthenticated(true));
+                dispatch(setUser(profileData.data));
+                navigate('/', { replace: true });
+            } else {
+                setErrors({ ...errors, ...res.data })
+                notify(res.message);
+            }
+        } catch (error) {
+            alert(error)
+        }
+        setLoading(false);
 
-    // Clear specific error when typing
-    if (errors[name]) {
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[name];
-        return newErrors;
-      });
-    }
-  };
+    };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    return (
+        <div className="min-h-screen w-full bg-slate-50 flex items-center justify-center p-6 relative overflow-hidden font-sans">
 
-    if (!validateForm()) return;
+            {/* Background Shapes */}
+            <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[80px] pointer-events-none" />
+            <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[80px] pointer-events-none" />
 
-    setLoading({ isLoading: true });
-    try {
-      let req = await fetch(`${API}/auth/login`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      })
-      let res = await req.json();
-      if (res.success) {
-        let profileReq = await fetch(`${API}/user/me`, {
-          method: "GET",
-          credentials: "include",
-        })
-        let profileData = await profileReq.json();
-        notify("Login Successfull!")
-        dispatch(setAuthenticated(true));
-        dispatch(setUser(profileData.data));
-        navigate('/', { replace: true });
-      } else {
-        setErrors({ ...errors, ...res.data })
-        notify(res.message);
-      }
-    } catch (error) {
-      alert(error)
-    }
-    setLoading({ isLoading: false });
-
-  };
-
-  return (
-    // Fixed inset-0 ensures full viewport height handling
-    // overflow-hidden prevents the outer container from scrolling, enforcing the internal scroll
-    <div className="fixed inset-0 w-screen h-[100dvh] flex flex-col bg-[#0a0e17] font-sans overflow-hidden">
-
-      {/* CSS for floating animation */}
-      <style>
-        {`
-          @keyframes float {
-            0%, 100% { transform: translateY(0) rotate(var(--rot)); }
-            50% { transform: translateY(-20px) rotate(calc(var(--rot) + 10deg)); }
-          }
-        `}
-      </style>
-
-      {/* Background Decor */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {/* Gradients */}
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-indigo-900/20 rounded-full blur-[100px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-900/20 rounded-full blur-[100px]" />
-        <div className="absolute top-[20%] left-[80%] w-[20%] h-[20%] bg-purple-900/20 rounded-full blur-[80px]" />
-
-        {/* Floating Icons */}
-        {bgIcons.map((item, index) => (
-          <div
-            key={index}
-            className="absolute text-slate-700/10 dark:text-slate-600/5 transition-all duration-1000"
-            style={{
-              top: item.top,
-              left: item.left,
-              right: item.right,
-              bottom: item.bottom,
-              animation: `float ${item.duration} ease-in-out infinite`,
-              animationDelay: item.delay,
-              '--rot': item.rot,
-            } as React.CSSProperties}
-          >
-            <item.Icon size={item.size} strokeWidth={1.5} />
-          </div>
-        ))}
-      </div>
-
-      {/* Back Button */}
-      <div className="absolute top-9 left-2 z-50 p-2 flex justify-between items-center max-w-md mx-auto w-full">
-        <button
-          onClick={() => navigate('/')}
-          className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-full transition-all"
-        >
-          <ChevronLeft className="w-6 h-6" />
-        </button>
-      </div>
-
-      {/* Main Content Scrollable Container */}
-      <div className="flex-1 w-full overflow-y-auto overflow-x-hidden flex flex-col relative z-10">
-        <div className="w-full max-w-[320px] xs:max-w-[360px] sm:max-w-md flex flex-col items-center m-auto p-3 xs:p-4 sm:p-6 pb-8">
-
-          {/* Header Section */}
-          <div className="text-center mb-4 sm:mb-8 w-full mt-2">
-            <h3 className="text-[10px] sm:text-xs font-bold tracking-[0.2em] text-slate-500 uppercase mb-2 sm:mb-4">School Connect</h3>
-
-            <StudentAvatar
-              emailLength={formData.email.length}
-              isPasswordFocused={isPasswordFocused}
-              isEmailFocused={isEmailFocused}
-            />
-
-            <h1 className="text-xl xs:text-2xl sm:text-3xl font-bold text-white mb-1">EduSphere</h1>
-            <p className="text-xs xs:text-sm text-slate-400">Secure Academic Login</p>
-          </div>
-
-          {/* Login Card */}
-          <div className="w-full bg-[#131620]/80 border border-slate-800/60 rounded-2xl p-4 xs:p-5 sm:p-8 shadow-2xl backdrop-blur-md">
-            <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-5" noValidate>
-              <div>
-                <Input
-                  variant="dark"
-                  label="Email"
-                  name="email"
-                  type="email"
-                  placeholder="Type your email here"
-                  value={formData.email}
-                  onChange={handleChange}
-                  onFocus={() => setIsEmailFocused(true)}
-                  onBlur={() => setIsEmailFocused(false)}
-                  icon={<Mail className="w-4 h-4 sm:w-5 sm:h-5" />}
-                  error={errors.email}
-                  required
-                />
-              </div>
-
-              <div>
-                <Input
-                  variant="dark"
-                  label="Password"
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  value={formData.password}
-                  onChange={handleChange}
-                  onFocus={() => setIsPasswordFocused(true)}
-                  onBlur={() => setIsPasswordFocused(false)}
-                  icon={<Lock className="w-4 h-4 sm:w-5 sm:h-5" />}
-                  error={errors.password}
-                  required
-                  rightElement={
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="text-slate-500 hover:text-slate-300 transition-colors focus:outline-none"
-                    >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  }
-                />
-              </div>
-
-              <div className="flex justify-end -mt-1">
-                <a href="#" className="text-[10px] xs:text-xs font-semibold text-indigo-400 hover:text-indigo-300 transition-colors">
-                  Forgot Credentials?
-                </a>
-              </div>
-
-              <Button
-                type="submit"
-                fullWidth
-                isLoading={loading.isLoading}
-                className="h-10 sm:h-12 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 border-none shadow-lg shadow-indigo-500/25 text-white font-semibold text-xs xs:text-sm sm:text-base rounded-xl transition-all duration-300 hover:scale-[1.02]"
-              >
-                <span className="flex items-center gap-2">
-                  {loading.isLoading ? 'Authenticating...' : 'Sign In'}
-                  {!loading.isLoading && <ArrowRight className="w-4 h-4" />}
-                </span>
-              </Button>
-            </form>
-
-            {/* Quick Auth Divider */}
-            <div className="relative mt-4 xs:mt-6 sm:mt-8 mb-3 xs:mb-4 sm:mb-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-slate-800"></div>
-              </div>
-              <div className="relative flex justify-center text-[10px] xs:text-xs">
-                <span className="px-3 py-1 bg-[#131620] text-slate-500 font-bold tracking-wider uppercase rounded-full">Quick Auth</span>
-              </div>
+            {/* Back Button */}
+            <div className="absolute top-6 left-6 z-20">
+                <button
+                    onClick={() => navigate('/')}
+                    className="flex items-center justify-center w-10 h-10 text-slate-400 hover:text-slate-600 hover:bg-white/80 rounded-full transition-all border border-transparent hover:border-slate-200 hover:shadow-sm"
+                >
+                    <ChevronLeft className="w-6 h-6" />
+                </button>
             </div>
 
-            {/* Social Buttons */}
-            <div className="flex justify-center gap-3 xs:gap-4">
-              {/* Google Button */}
-              <button className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white hover:bg-slate-100 flex items-center justify-center transition-colors border border-transparent shadow-md">
-                <svg className="w-5 h-5 sm:w-6 sm:h-6" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.84z" />
-                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-                </svg>
-              </button>
+            <div className="w-full max-w-[380px] relative z-10 flex flex-col items-center">
 
-              {/* Apple Button */}
-              <button className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black hover:bg-slate-900 flex items-center justify-center transition-colors border border-transparent shadow-md">
-                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.74 1.18 0 2.45-1.62 4.37-1.54 1.77.08 2.6.76 3.16 1.48-2.66 1.34-2.14 5.39.46 6.55-.54 1.73-1.38 3.55-3.07 5.74zm-2.19-14.7c.6-1.54 2.58-2.43 2.52-4.48-2.06.1-4.04 1.25-4.52 2.87-.43 1.48 1.4 4.54 2 1.61z" />
-                </svg>
-              </button>
+                {/* Welcome Text */}
+                <div className="text-center mb-8">
+                    <h1 className="text-3xl font-bold text-slate-900 mb-2">Welcome Back!</h1>
+                    <p className="text-slate-500 text-sm">Please sign in to your account</p>
+                </div>
+
+                {/* Main Card */}
+                <div className="w-full bg-white rounded-[2rem] shadow-2xl shadow-slate-200/50 relative">
+
+                    {/* Tabs */}
+                    <div className="flex w-full px-8 pt-6 border-b border-slate-100">
+                        <div className="relative pb-4 px-2 cursor-pointer mr-6">
+                            <span className="text-indigo-600 font-bold text-base">Login</span>
+                            <div className="absolute bottom-0 left-0 w-full h-0.5 bg-indigo-600 rounded-full shadow-[0_-2px_6px_rgba(79,70,229,0.3)]"></div>
+                        </div>
+                        <Link to="/register" className="pb-4 px-2 text-slate-400 hover:text-slate-600 font-medium text-base transition-colors">
+                            Signup
+                        </Link>
+                    </div>
+
+                    <form onSubmit={handleSubmit} className="px-8 pt-8 pb-16">
+                        <div className="space-y-4">
+                            <Input
+                                variant="light"
+                                label="Email Address"
+                                name="email"
+                                type="email"
+                                placeholder="name@example.com"
+                                value={formData.email}
+                                onChange={handleChange}
+                                icon={<Mail className="w-4 h-4" />}
+                                error={errors.email}
+                                required
+                                className="bg-slate-50 border-transparent focus:bg-white"
+                            />
+
+                            <div className="space-y-2">
+                                <Input
+                                    variant="light"
+                                    label="Password"
+                                    name="password"
+                                    type={showPassword ? "text" : "password"}
+                                    placeholder="••••••••"
+                                    value={formData.password}
+                                    onChange={handleChange}
+                                    icon={<Lock className="w-4 h-4" />}
+                                    error={errors.password}
+                                    required
+                                    className="bg-slate-50 border-transparent focus:bg-white"
+                                    rightElement={
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="text-slate-400 hover:text-indigo-600 transition-colors focus:outline-none"
+                                        >
+                                            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                        </button>
+                                    }
+                                />
+                                <div className="flex items-center justify-between mt-2">
+                                    <label className="flex items-center gap-2 cursor-pointer group">
+                                        <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 transition-all" />
+                                        <span className="text-xs text-slate-500 group-hover:text-slate-700 font-medium">Remember me</span>
+                                    </label>
+                                    <a href="#" className="text-xs font-bold text-indigo-600 hover:text-indigo-700 transition-colors">Forgot Password?</a>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Floating Action Button */}
+                        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2">
+                            <button
+                                type="submit"
+                                disabled={isLoading}
+                                className="w-16 h-16 rounded-full bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-lg shadow-indigo-500/40 flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed group"
+                            >
+                                {isLoading ? (
+                                    <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                ) : (
+                                    <ArrowRight className="w-7 h-7 group-hover:translate-x-0.5 transition-transform" />
+                                )}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                {/* Social Options */}
+                <div className="mt-12 flex flex-col items-center gap-6 w-full relative z-10">
+                    {/* Separator */}
+                    <div className="flex items-center gap-3 w-full px-8 opacity-60">
+                        <div className="h-px bg-slate-300 flex-1"></div>
+                        <span className="text-xs text-slate-500 font-medium whitespace-nowrap">Or continue with</span>
+                        <div className="h-px bg-slate-300 flex-1"></div>
+                    </div>
+
+                    {/* Buttons */}
+                    <div className="flex items-center justify-center gap-5">
+                        {/* Google */}
+                        <button className="w-14 h-14 rounded-full bg-white border border-slate-100 shadow-[0_4px_10px_rgba(0,0,0,0.03)] flex items-center justify-center hover:scale-110 hover:shadow-md transition-all duration-300 group">
+                            <svg className="w-6 h-6" viewBox="0 0 24 24">
+                                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+                                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+                                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+                            </svg>
+                        </button>
+
+                        {/* Facebook */}
+                        <button className="w-14 h-14 rounded-full bg-white border border-slate-100 shadow-[0_4px_10px_rgba(0,0,0,0.03)] flex items-center justify-center hover:scale-110 hover:shadow-md transition-all duration-300 group">
+                            <svg className="w-7 h-7 text-[#1877F2]" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.791-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                            </svg>
+                        </button>
+
+                        {/* Twitter/X */}
+                        <button className="w-14 h-14 rounded-full bg-white border border-slate-100 shadow-[0_4px_10px_rgba(0,0,0,0.03)] flex items-center justify-center hover:scale-110 hover:shadow-md transition-all duration-300 group">
+                            <svg className="w-5 h-5 text-slate-800" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
             </div>
-          </div>
-
-          {/* Footer Text */}
-          <div className="text-center mt-4 xs:mt-6">
-            <p className="text-slate-500 text-[10px] xs:text-xs sm:text-sm">
-              New Student?{' '}
-              <Link to="/register" className="text-white font-bold hover:underline">
-                Register Account
-              </Link>
-            </p>
-          </div>
         </div>
-      </div>
-    </div>
-  );
+    );
 };

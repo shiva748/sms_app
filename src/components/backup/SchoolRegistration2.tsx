@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   School, Mail, Phone, MapPin, Building, Calendar,
-  Upload, X, ArrowRight, ChevronLeft, Image as ImageIcon,
-  ChevronDown, Book
+  Upload, X, Check, ArrowRight, ChevronLeft, Image as ImageIcon,
+  Book, PenTool, GraduationCap, Calculator, Ruler, Globe, Microscope, Backpack, Library, ChevronDown
 } from 'lucide-react';
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
@@ -12,6 +12,20 @@ import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { setUser } from '../..//store/slices/authSlice';
 import { notify } from '../../services/utils';
 
+// Background Icons (Consistent with other auth screens)
+const bgIcons = [
+  { Icon: Book, top: '10%', left: '10%', size: 48, delay: '0s', duration: '15s', rot: '12deg' },
+  { Icon: PenTool, top: '20%', right: '15%', size: 32, delay: '2s', duration: '12s', rot: '-15deg' },
+  { Icon: GraduationCap, bottom: '15%', left: '20%', size: 64, delay: '1s', duration: '18s', rot: '5deg' },
+  { Icon: Calculator, top: '40%', left: '5%', size: 40, delay: '3s', duration: '20s', rot: '-10deg' },
+  { Icon: Ruler, bottom: '30%', right: '10%', size: 44, delay: '4s', duration: '16s', rot: '45deg' },
+  { Icon: Globe, top: '15%', left: '50%', size: 36, delay: '5s', duration: '22s', rot: '0deg' },
+  { Icon: Microscope, bottom: '10%', left: '80%', size: 52, delay: '2s', duration: '19s', rot: '10deg' },
+  { Icon: Backpack, top: '60%', right: '25%', size: 48, delay: '1s', duration: '14s', rot: '-5deg' },
+  { Icon: Library, bottom: '40%', left: '85%', size: 38, delay: '3s', duration: '17s', rot: '0deg' }
+];
+
+// Helper component for Select inputs to match the UI theme
 interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   label: string;
   icon?: React.ReactNode;
@@ -21,44 +35,44 @@ interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
 
 const SelectInput: React.FC<SelectProps> = ({ label, icon, options, error, className = '', ...props }) => {
   return (
-    <div className="w-full mb-4 sm:mb-5">
-      <label className={`block text-[10px] xs:text-xs font-bold uppercase tracking-wider mb-2 ml-1 ${error ? 'text-red-500' : 'text-slate-600'}`}>
+    <div className="w-full mb-3 sm:mb-4">
+      <label className={`block text-[10px] xs:text-xs font-bold uppercase tracking-wider mb-1.5 sm:mb-2 ${error ? 'text-red-500' : 'text-slate-400'}`}>
         {label}
       </label>
       <div className="relative group">
         {icon && (
-          <div className={`absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors duration-300 ${error ? 'text-red-400' : 'text-slate-400 group-focus-within:text-indigo-600'}`}>
+          <div className={`absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none transition-colors ${error ? 'text-red-400' : 'text-slate-500 group-focus-within:text-indigo-400'}`}>
             {icon}
           </div>
         )}
         <select
           className={`
-            w-full px-4 py-3.5 sm:py-4 rounded-xl text-sm shadow-sm border appearance-none
-            transition-all duration-200 ease-out cursor-pointer
-            focus:outline-none focus:ring-4 focus:ring-indigo-500/10
+            w-full px-3 py-2.5 sm:py-3 rounded-xl text-xs xs:text-sm shadow-sm border appearance-none
+            transition-all duration-200 ease-in-out cursor-pointer
+            focus:outline-none focus:ring-2 focus:ring-offset-0
             disabled:opacity-50 disabled:cursor-not-allowed
-            ${icon ? 'pl-11' : ''}
-            bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-indigo-500 hover:border-slate-300
+            ${icon ? 'pl-10' : ''}
+            bg-[#1e293b]/50 text-white placeholder-slate-500 hover:border-slate-600
             ${error
-              ? 'border-red-500/80 focus:border-red-500 focus:shadow-[0_0_20px_-5px_rgba(239,68,68,0.1)]'
-              : ''}
+              ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20'
+              : 'border-slate-700 focus:border-indigo-500 focus:ring-indigo-500/20'}
             ${className}
           `}
           {...props}
         >
-          <option value="" disabled className="text-slate-400">Select {label}</option>
+          <option value="" disabled className="bg-[#1e293b] text-slate-500">Select {label}</option>
           {options.map(opt => (
-            <option key={opt} value={opt} className="text-slate-900">
+            <option key={opt} value={opt} className="bg-[#1e293b] text-white">
               {opt}
             </option>
           ))}
         </select>
-        <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-400">
+        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-500">
           <ChevronDown className="w-4 h-4" />
         </div>
       </div>
       {error && (
-        <p className="mt-1.5 ml-1 text-[10px] xs:text-xs text-red-500 font-medium animate-in slide-in-from-top-1 fade-in duration-200">
+        <p className="mt-1 text-[10px] xs:text-xs text-red-500 animate-pulse">
           {error}
         </p>
       )}
@@ -91,7 +105,7 @@ export const SchoolRegistration: React.FC = () => {
 
   // Handle body background
   useEffect(() => {
-    document.body.style.backgroundColor = '#f8fafc';
+    document.body.style.backgroundColor = '#0a0e17';
     return () => {
       document.body.style.backgroundColor = '';
     };
@@ -222,63 +236,75 @@ export const SchoolRegistration: React.FC = () => {
     setIsLoading(false);
   };
 
-
   return (
-    <div className="fixed inset-0 w-screen h-[100dvh] flex flex-col bg-slate-50 font-sans overflow-hidden">
+    <div className="fixed inset-0 w-screen h-[100dvh] flex flex-col bg-[#0a0e17] font-sans">
 
-      {/* Background Shapes */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[80px]" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[80px]" />
+      {/* Animations */}
+      <style>
+        {`
+          @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(var(--rot)); }
+            50% { transform: translateY(-20px) rotate(calc(var(--rot) + 10deg)); }
+          }
+        `}
+      </style>
+
+      {/* Background Decor */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-indigo-900/20 rounded-full blur-[100px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-900/20 rounded-full blur-[100px]" />
+
+        {bgIcons.map((item, index) => (
+          <div
+            key={index}
+            className="absolute text-slate-700/10 dark:text-slate-600/5 transition-all duration-1000"
+            style={{
+              top: item.top,
+              left: item.left,
+              right: item.right,
+              bottom: item.bottom,
+              animation: `float ${item.duration} ease-in-out infinite`,
+              animationDelay: item.delay,
+              '--rot': item.rot,
+            } as React.CSSProperties}
+          >
+            <item.Icon size={item.size} strokeWidth={1.5} />
+          </div>
+        ))}
       </div>
 
-      {/* Header Wrapper (paints SAFE-AREA background) */}
-      <div className="flex-none z-50 w-full bg-slate-900">
-
-        {/* Safe-area spacer */}
-        <div className="pt-[env(safe-area-inset-top)]"></div>
-
-        {/* Actual Header Bar (UI) */}
-        <div className="bg-white shadow-sm border-b border-slate-200">
-          <div className="w-full max-w-xl mx-auto px-4 py-4 flex items-center">
-
-            <button
-              onClick={() => navigate(-1)}
-              className="p-2 -ml-2 text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 rounded-full transition-all"
-            >
-              <ChevronLeft className="w-6 h-6" />
-            </button>
-            <div className="ml-2">
-              <h1 className="text-slate-900 font-bold text-lg leading-none">
-                Register School
-              </h1>
-              <p className="text-slate-500 text-xs">
-                Create new institution profile
-              </p>
-            </div>
-
+      {/* Header Section (Flex Item) */}
+      <div className="flex-none z-50 w-full bg-[#0a0e17]/80 backdrop-blur-xl border-b border-white/5 shadow-lg shadow-black/10">
+        <div className="w-full max-w-xl mx-auto px-4 pb-4 pt-[calc(1rem+env(safe-area-inset-top))] flex items-center">
+          <button
+            onClick={() => navigate(-1)}
+            className="p-2 -ml-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-full transition-all"
+          >
+            <ChevronLeft className="w-6 h-6" />
+          </button>
+          <div className="ml-2">
+            <h1 className="text-white font-bold text-lg leading-none">Register School</h1>
+            <p className="text-slate-500 text-xs">Create new institution profile</p>
           </div>
         </div>
-
       </div>
 
+      {/* Main Content (Flex Scrollable Area) */}
+      <div className="flex-1 w-full overflow-y-auto overflow-x-hidden relative z-10 scroll-smooth">
+        <div className="w-full max-w-xl mx-auto px-4 py-6 sm:py-8 pb-12">
 
-      {/* SCROLL CONTAINER */}
-      <div className="flex-1 w-full overflow-y-auto overflow-x-hidden relative z-10">
-        <div className="w-full max-w-2xl mx-auto px-4 py-6 pb-16">
-
-          <form onSubmit={handleSubmit} className="bg-white/80 backdrop-blur-xl rounded-[2rem] shadow-xl shadow-slate-200/50 p-6 sm:p-10 border border-white space-y-8">
+          <form onSubmit={handleSubmit} className="w-full bg-[#131620]/80 border border-slate-800/60 rounded-2xl p-5 sm:p-8 shadow-2xl backdrop-blur-md space-y-6" noValidate>
 
             {/* Logo Upload Section */}
             <div>
-              <label className={`block text-xs font-bold uppercase tracking-wider mb-3 ml-1 ${errors.logo ? 'text-red-500' : 'text-slate-600'}`}>
+              <label className={`block text-[10px] xs:text-xs font-bold uppercase tracking-wider mb-2 ${errors.logo ? 'text-red-500' : 'text-slate-400'}`}>
                 School Logo
               </label>
               <div
                 onClick={() => fileInputRef.current?.click()}
                 className={`
-                  w-full h-40 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center cursor-pointer transition-all relative overflow-hidden group
-                  ${logoPreview ? 'border-indigo-200 bg-indigo-50' : errors.logo ? 'border-red-300 bg-red-50' : 'border-slate-300 hover:border-indigo-400 hover:bg-slate-50'}
+                  w-full h-32 border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all relative overflow-hidden group
+                  ${logoPreview ? 'border-indigo-500/50 bg-indigo-500/5' : errors.logo ? 'border-red-500/50 bg-red-500/5' : 'border-slate-700 hover:border-indigo-400 hover:bg-slate-800/50'}
                 `}
               >
                 {logoPreview ? (
@@ -286,20 +312,20 @@ export const SchoolRegistration: React.FC = () => {
                     <img src={logoPreview} alt="Logo Preview" className="h-full w-full object-contain p-4" />
                     <button
                       onClick={removeLogo}
-                      className="absolute top-3 right-3 p-1.5 bg-white text-red-500 rounded-full hover:bg-red-50 transition-colors shadow-md z-10 border border-red-100"
+                      className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg z-10"
                     >
                       <X className="w-4 h-4" />
                     </button>
                   </>
                 ) : (
                   <>
-                    <div className={`p-4 rounded-full mb-3 group-hover:scale-110 transition-transform shadow-sm ${errors.logo ? 'bg-red-100' : 'bg-white'}`}>
-                      <ImageIcon className={`w-6 h-6 ${errors.logo ? 'text-red-500' : 'text-indigo-500'}`} />
+                    <div className={`p-3 rounded-full mb-2 group-hover:scale-110 transition-transform shadow-lg ${errors.logo ? 'bg-red-500/10' : 'bg-slate-800'}`}>
+                      <ImageIcon className={`w-5 h-5 ${errors.logo ? 'text-red-400' : 'text-indigo-400'}`} />
                     </div>
-                    <p className={`text-sm font-semibold ${errors.logo ? 'text-red-500' : 'text-slate-600'}`}>
-                      {errors.logo ? 'Logo Required' : 'Click to upload logo'}
+                    <p className={`text-xs font-medium ${errors.logo ? 'text-red-400' : 'text-slate-400'}`}>
+                      {errors.logo ? 'Logo Required' : 'Tap to upload logo'}
                     </p>
-                    <p className="text-xs text-slate-400 mt-1">PNG, JPG up to 5MB</p>
+                    <p className="text-[10px] text-slate-600 mt-1">PNG, JPG up to 5MB</p>
                   </>
                 )}
                 <input
@@ -314,14 +340,14 @@ export const SchoolRegistration: React.FC = () => {
 
             {/* Basic Info Section */}
             <div className="space-y-4">
-              <div className="flex items-center gap-4 mb-2">
-                <div className="h-px bg-slate-200 flex-1"></div>
-                <span className="text-xs uppercase font-bold text-slate-400 tracking-widest">Basic Details</span>
-                <div className="h-px bg-slate-200 flex-1"></div>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="h-px bg-slate-800 flex-1"></div>
+                <span className="text-[10px] uppercase font-bold text-slate-600 tracking-wider">Basic Details</span>
+                <div className="h-px bg-slate-800 flex-1"></div>
               </div>
 
               <Input
-                variant="light"
+                variant="dark"
                 label="School Name"
                 name="name"
                 value={formData.name}
@@ -333,7 +359,7 @@ export const SchoolRegistration: React.FC = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Input
-                  variant="light"
+                  variant="dark"
                   label="Email Address"
                   type="email"
                   name="email"
@@ -344,7 +370,7 @@ export const SchoolRegistration: React.FC = () => {
                   error={errors.email}
                 />
                 <Input
-                  variant="light"
+                  variant="dark"
                   label="Phone Number"
                   type="tel"
                   name="phone"
@@ -359,14 +385,14 @@ export const SchoolRegistration: React.FC = () => {
 
             {/* Address Section */}
             <div className="space-y-4">
-              <div className="flex items-center gap-4 mb-2">
-                <div className="h-px bg-slate-200 flex-1"></div>
-                <span className="text-xs uppercase font-bold text-slate-400 tracking-widest">Location</span>
-                <div className="h-px bg-slate-200 flex-1"></div>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="h-px bg-slate-800 flex-1"></div>
+                <span className="text-[10px] uppercase font-bold text-slate-600 tracking-wider">Location</span>
+                <div className="h-px bg-slate-800 flex-1"></div>
               </div>
 
               <Input
-                variant="light"
+                variant="dark"
                 label="Street Address"
                 name="address"
                 value={formData.address}
@@ -378,7 +404,7 @@ export const SchoolRegistration: React.FC = () => {
 
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
                 <Input
-                  variant="light"
+                  variant="dark"
                   label="City"
                   name="city"
                   value={formData.city}
@@ -387,7 +413,7 @@ export const SchoolRegistration: React.FC = () => {
                   error={errors.city}
                 />
                 <Input
-                  variant="light"
+                  variant="dark"
                   label="State"
                   name="state"
                   value={formData.state}
@@ -396,7 +422,7 @@ export const SchoolRegistration: React.FC = () => {
                   error={errors.state}
                 />
                 <Input
-                  variant="light"
+                  variant="dark"
                   label="Pincode"
                   name="pincode"
                   value={formData.pincode}
@@ -410,10 +436,10 @@ export const SchoolRegistration: React.FC = () => {
 
             {/* Academic Section */}
             <div className="space-y-4">
-              <div className="flex items-center gap-4 mb-2">
-                <div className="h-px bg-slate-200 flex-1"></div>
-                <span className="text-xs uppercase font-bold text-slate-400 tracking-widest">Academic Profile</span>
-                <div className="h-px bg-slate-200 flex-1"></div>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="h-px bg-slate-800 flex-1"></div>
+                <span className="text-[10px] uppercase font-bold text-slate-600 tracking-wider">Academic Profile</span>
+                <div className="h-px bg-slate-800 flex-1"></div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -439,7 +465,7 @@ export const SchoolRegistration: React.FC = () => {
               </div>
 
               <Input
-                variant="light"
+                variant="dark"
                 label="Established Year"
                 type="number"
                 name="establishedYear"
@@ -452,12 +478,12 @@ export const SchoolRegistration: React.FC = () => {
             </div>
 
             {/* Submit Action */}
-            <div className="pt-6">
+            <div className="pt-4">
               <Button
                 type="submit"
                 fullWidth
                 isLoading={isLoading}
-                className="h-14 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 shadow-lg shadow-indigo-500/30 text-white font-bold text-base rounded-full transition-all duration-300 hover:scale-[1.02]"
+                className="h-12 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 border-none shadow-lg shadow-indigo-500/25 text-white font-bold text-sm rounded-xl transition-all duration-300 hover:scale-[1.02]"
               >
                 <span className="flex items-center gap-2">
                   {isLoading ? 'Registering...' : 'Register School'}
@@ -468,9 +494,9 @@ export const SchoolRegistration: React.FC = () => {
 
           </form>
 
-          <div className="text-center mt-8">
-            <p className="text-slate-400 text-xs">
-              By registering, you agree to EduSphere's Terms & Privacy Policy.
+          <div className="text-center mt-6 mb-8">
+            <p className="text-slate-500 text-xs">
+              By registering, you agree to EduSphere's <span className="text-indigo-400 cursor-pointer hover:underline">Terms</span> & <span className="text-indigo-400 cursor-pointer hover:underline">Privacy Policy</span>.
             </p>
           </div>
 
