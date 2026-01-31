@@ -1,14 +1,13 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   User, Calendar, Hash, Image as ImageIcon, Phone, Mail,
   X, Upload, Save, UserCheck, Smartphone, CheckCircle2
 } from 'lucide-react';
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
-import { API_BASE_URL as API, FILE_BASE_URL } from '../config/api';
-import { useAppSelector, useAppDispatch } from '../../store/hooks';
+import { API_BASE_URL as API } from '../config/api';
+import { useAppSelector } from '../../store/hooks';
 import { notify } from '../../services/utils';
-import { setSelectedStudent } from '../../store/slices/authSlice';
 
 export interface StudentFormData {
   name: string;
@@ -30,42 +29,21 @@ export const StudentAdmissionForm: React.FC<StudentAdmissionFormProps> = ({
   onSuccess,
   onCancel
 }) => {
-  const dispatch = useAppDispatch();
   const { school, selectedStudent } = useAppSelector(state => state.auth)
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const [formData, setFormData] = useState<StudentFormData>({
-    name: '',
-    dateOfBirth: '',
-    admissionNumber: '',
-    photo: null,
-    primaryContactName: '',
-    primaryContactPhone: '',
-    primaryContactEmail: '',
+    name: selectedStudent.student?.name || '',
+    dateOfBirth: selectedStudent.student?.dateOfBirth || '',
+    admissionNumber: selectedStudent.student?.admissionNumber || '',
+    photo: selectedStudent.student?.photo || null,
+    primaryContactName: selectedStudent.student?.primaryContactName || '',
+    primaryContactPhone: selectedStudent.student?.primaryContactPhone || '',
+    primaryContactEmail: selectedStudent.student?.primaryContactEmail || '',
   });
-  const isUpdate = !!selectedStudent?.student;
-  useEffect(() => {
-    if (isUpdate) {
-      const s = selectedStudent.student;
-      console.log(`${FILE_BASE_URL}/${s.photo}`);
-      setFormData({
-        name: s.name || '',
-        dateOfBirth: s.dateOfBirth || '',
-        admissionNumber: s.admissionNumber || '',
-        photo: null, // file only when changed
-        primaryContactName: s.primaryContactName || '',
-        primaryContactPhone: s.primaryContactPhone || '',
-        primaryContactEmail: s.primaryContactEmail || ''
-      });
 
-
-      if (s.photo) {
-        setPhotoPreview(`${FILE_BASE_URL}/${s.photo}`); // URL from backend
-      }
-    }
-  }, []);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validate = () => {
@@ -73,7 +51,7 @@ export const StudentAdmissionForm: React.FC<StudentAdmissionFormProps> = ({
 
     // Personal Info Validation
     if (!formData.name.trim()) newErrors.name = "Student name is required";
-    if (!isUpdate && !formData.photo) newErrors.photo = "Student photo is required";
+    if (!formData.photo) newErrors.photo = "Student photo is required";
 
     // Although dateOfBirth is optional in DB entity, it's usually good practice to require it
     if (!formData.dateOfBirth) newErrors.dateOfBirth = "Date of birth is required";
@@ -158,10 +136,7 @@ export const StudentAdmissionForm: React.FC<StudentAdmissionFormProps> = ({
         })
         const res = await req.json();
         if (res.success) {
-          if (isUpdate) {
-            dispatch(setSelectedStudent({ ...selectedStudent, student: res.data }))
-          }
-          onSuccess(isUpdate ? res.data : null);
+          onSuccess();
         } else {
           notify(res.message)
           setErrors({ ...errors, ...res.data, dateOfBirth: res.dateOfBirth || res.isStudentAgeValid })
@@ -283,6 +258,11 @@ export const StudentAdmissionForm: React.FC<StudentAdmissionFormProps> = ({
                 value={formData.admissionNumber}
                 onChange={handleChange}
                 icon={<Hash className="w-4 h-4" />}
+                rightElement={
+                  <div className="pr-3 text-[10px] text-slate-400 font-medium uppercase tracking-wider">
+                    Optional
+                  </div>
+                }
               />
             </div>
           </div>
@@ -329,6 +309,11 @@ export const StudentAdmissionForm: React.FC<StudentAdmissionFormProps> = ({
                 onChange={handleChange}
                 error={errors.primaryContactEmail}
                 icon={<Mail className="w-4 h-4" />}
+                rightElement={
+                  <div className="pr-3 text-[10px] text-slate-400 font-medium uppercase tracking-wider">
+                    Optional
+                  </div>
+                }
               />
             </div>
           </div>
@@ -351,7 +336,7 @@ export const StudentAdmissionForm: React.FC<StudentAdmissionFormProps> = ({
           className="bg-indigo-600 hover:bg-indigo-700 text-white min-w-[140px]"
         >
           <Save className="w-4 h-4 mr-2" />
-          {isUpdate ? "Update Student" : "Admit Student"}
+          Admit Student
         </Button>
       </div>
     </form>

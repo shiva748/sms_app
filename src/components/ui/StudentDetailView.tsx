@@ -3,10 +3,10 @@ import {
     User, Phone, Mail, Calendar, ShieldAlert, BookOpen, FileEdit, GraduationCap, Flag
 } from 'lucide-react';
 import { API_BASE_URL as API, FILE_BASE_URL } from '../config/api';
-import { useAppSelector } from '../../store/hooks';
+import { useAppSelector, useAppDispatch } from '../../store/hooks';
 import { formatGrade, notify } from '../../services/utils';
+import { setSelectedStudent } from '../../store/slices/authSlice';
 interface StudentDetailViewProps {
-    student: any;
     onClose: () => void;
     onEdit: () => void;
     onAssignClass: () => void;
@@ -15,15 +15,15 @@ interface StudentDetailViewProps {
 
 
 export const StudentDetailView: React.FC<StudentDetailViewProps> = ({
-    student,
-    onClose,
     onEdit,
     onAssignClass,
     onUpdateStatus
 }) => {
-    const { school } = useAppSelector(state => state.auth);
+    const dispatch = useAppDispatch();
+    const { school, selectedStudent } = useAppSelector(state => state.auth);
+    const student = selectedStudent.student;
+    const academicData = selectedStudent.academicData || {};
     if (!student) return null;
-    const [academicData, setAcademicData] = useState({});
     const fetchStudent = async () => {
         const req = await fetch(`${API}/students/${student.id}/academic`, {
             method: "GET",
@@ -32,7 +32,7 @@ export const StudentDetailView: React.FC<StudentDetailViewProps> = ({
         });
         const res = await req.json();
         if (res.success) {
-            setAcademicData(res.data);
+            dispatch(setSelectedStudent({ ...selectedStudent, academicData: res.data }))
         } else {
             notify("failed to load student academic");
         }

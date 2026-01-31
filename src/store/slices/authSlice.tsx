@@ -33,6 +33,7 @@ export type AuthState = {
   schoolData: SchoolData | null;
   profile: any | null,
   token: string | null;
+  selectedStudent: any | {}
 };
 
 /* ================= INITIAL STATE ================= */
@@ -44,7 +45,8 @@ const initialState: AuthState = {
   profile: null,
   school: null,
   token: null,
-  schoolData: null
+  schoolData: null,
+  selectedStudent: {},
 };
 
 /* ================= SLICE ================= */
@@ -78,6 +80,10 @@ const authSlice = createSlice({
       state.authenticated = action.payload;
     },
 
+    setSelectedStudent(state, action: PayloadAction<any>) {
+      state.selectedStudent = action.payload;
+    },
+
     logout(state) {
       state.user = null;
       state.role = null;
@@ -100,7 +106,8 @@ export const {
   setAuthenticated,
   setSchoolData,
   logout,
-  setProfile
+  setProfile,
+  setSelectedStudent
 } = authSlice.actions;
 
 export default authSlice.reducer;

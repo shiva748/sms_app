@@ -1,12 +1,15 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     ChevronLeft, Plus, CheckCircle2, Clock, Ban, ArrowRight, MapPin,
-    UserSquare2
+    UserSquare2, School, Check, X, Building
 } from 'lucide-react';
+import { FILE_BASE_URL, API_BASE_URL as API } from '../config/api';
 import { Button } from '../ui/Button';
-import { useAppSelector } from '../../store/hooks';
+import { useAppSelector, useAppDispatch } from '../../store/hooks';
 import { notify } from '../../services/utils';
+import { Modal } from '../ui/Modal';
+import { setUser } from '../../store/slices/authSlice';
 
 // Helper to determine gradient based on index
 const getGradient = (index: number) => {
@@ -21,7 +24,10 @@ const getGradient = (index: number) => {
 };
 
 export const TeacherProfileSelection: React.FC = ({ back }) => {
+    const dispatch = useAppDispatch();
     const { user } = useAppSelector((state) => state.auth);
+    const [selectedInvitation, setSelectedInvitation] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
 
     // Handle body background color
@@ -35,9 +41,38 @@ export const TeacherProfileSelection: React.FC = ({ back }) => {
     const handleSelectProfile = (profile: any) => {
         if (profile.status === 'ACTIVE') {
             navigate('/dashboard');
+        } else if (profile.status === 'PENDING') {
+            setSelectedInvitation(profile);
         } else {
             notify(`Cannot access account (${profile.status})`)
         }
+    };
+    const handleInvitationResponse = async (action: 'ACCEPT' | 'REJECT') => {
+        setIsLoading(true);
+        // Simulate API call
+        try {
+            const accepted = action == "ACCEPT";
+            let req = await fetch(`${API}/user/invitation/teacher`, {
+                method: "PUT",
+                credentials: "include",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id: selectedInvitation.id, accepted }),
+            })
+            let res = await req.json();
+            if (res.success) {
+                let profileReq = await fetch(`${API}/user/me`, {
+                    method: "GET",
+                    credentials: "include",
+                })
+                let profileData = await profileReq.json();
+                dispatch(setUser(profileData.data));
+                setSelectedInvitation(null);
+            }
+            notify(res.message);
+        } catch (error) {
+            alert(error)
+        }
+        setIsLoading(false);
     };
 
     return (
@@ -96,7 +131,15 @@ export const TeacherProfileSelection: React.FC = ({ back }) => {
                       flex items-center justify-center text-white font-bold text-xl shadow-md
                       group-hover:shadow-lg transition-shadow duration-300
                     `}>
-                                            {initial}
+                                            {profile.school.logo ? (
+                                                <img
+                                                    src={`${FILE_BASE_URL}/${profile.school.logo}`}
+                                                    className="w-12 h-12 object-cover rounded-lg"
+                                                    alt="school logo"
+                                                />
+                                            ) : (
+                                                initial
+                                            )}
                                         </div>
 
                                         {/* Center: Details */}
@@ -173,6 +216,67 @@ export const TeacherProfileSelection: React.FC = ({ back }) => {
 
                 </div>
             </div>
+            {/* Invitation Response Modal */}
+            <Modal
+                isOpen={!!selectedInvitation}
+                onClose={() => !isLoading && setSelectedInvitation(null)}
+                title="School Invitation"
+                maxWidth="sm"
+            >
+                {selectedInvitation && (
+                    <div className="flex flex-col items-center text-center pb-2">
+
+                        <div className="w-20 h-20 bg-indigo-50 rounded-2xl flex items-center justify-center mb-5 shadow-inner">
+                            <School className="w-10 h-10 text-indigo-600" />
+                        </div>
+
+                        <h3 className="text-xl font-bold text-slate-900 mb-2 leading-tight">
+                            {selectedInvitation.school.name}
+                        </h3>
+
+                        <p className="text-slate-500 text-sm mb-6 leading-relaxed px-4">
+                            You have been invited to join the faculty as a <strong>Teacher</strong>.
+                        </p>
+
+                        <div className="bg-slate-50 rounded-xl p-4 w-full mb-8 border border-slate-100 flex flex-col gap-3">
+                            <div className="flex items-center gap-3 text-sm text-slate-600">
+                                <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm">
+                                    <MapPin className="w-4 h-4 text-indigo-500" />
+                                </div>
+                                <span className="font-medium text-left">{selectedInvitation.school.city}, {selectedInvitation.school.state}</span>
+                            </div>
+                            <div className="flex items-center gap-3 text-sm text-slate-600">
+                                <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm">
+                                    <Building className="w-4 h-4 text-pink-500" />
+                                </div>
+                                <span className="font-medium text-left">Role: Teaching Staff</span>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3 w-full">
+                            <Button
+                                variant="outline"
+                                fullWidth
+                                onClick={() => handleInvitationResponse('REJECT')}
+                                disabled={isLoading}
+                                className="border-red-100 text-red-600 hover:bg-red-50 hover:border-red-200 h-12"
+                            >
+                                <X className="w-4 h-4 mr-2" />
+                                Reject
+                            </Button>
+                            <Button
+                                fullWidth
+                                onClick={() => handleInvitationResponse('ACCEPT')}
+                                isLoading={isLoading}
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white h-12 shadow-lg shadow-emerald-500/20"
+                            >
+                                <Check className="w-4 h-4 mr-2" />
+                                Accept
+                            </Button>
+                        </div>
+                    </div>
+                )}
+            </Modal>
         </div>
     );
 };

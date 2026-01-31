@@ -3,7 +3,7 @@ import { BookOpen, Save, Hash } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { useAppSelector } from '../../store/hooks';
-import { notify, formatGrade, gradeOrderMap } from '../../services/utils';
+import { notify, gradeOrderMap } from '../../services/utils';
 import { API_BASE_URL as API } from '../config/api';
 interface AssignClassFormProps {
     studentName: string;
@@ -15,13 +15,15 @@ interface AssignClassFormProps {
 }
 
 export const AssignClassForm: React.FC<AssignClassFormProps> = ({
-    student,
     currentGrade = '',
     currentSection = '',
     currentRollNumber = '',
     onSuccess,
     onCancel
 }) => {
+    const { school, schoolData, selectedStudent } = useAppSelector((state) => state.auth)
+    const student = selectedStudent.student;
+    const academicData = selectedStudent.academicData;
     const formatGrade = (grade) => {
         return grade
             .toLowerCase()
@@ -29,10 +31,9 @@ export const AssignClassForm: React.FC<AssignClassFormProps> = ({
             .map(word => word.charAt(0).toUpperCase() + word.slice(1))
             .join(' ');
     };
-    const { school, schoolData } = useAppSelector((state) => state.auth)
-    const [grade, setGrade] = useState(currentGrade);
-    const [section, setSection] = useState(currentSection);
-    const [rollNumber, setRollNumber] = useState(currentRollNumber);
+    const [grade, setGrade] = useState(academicData.gradeId);
+    const [section, setSection] = useState(academicData.sectionId);
+    const [rollNumber, setRollNumber] = useState(academicData.rollNumber);
     const [isLoading, setIsLoading] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -40,13 +41,14 @@ export const AssignClassForm: React.FC<AssignClassFormProps> = ({
         setIsLoading(true);
         try {
             const req = await fetch(`${API}/schools/${school.id}/student/enroll`, {
-                method: "POST",
+                method: academicData.gradeId ? "PUT" : "POST",
                 credentials: "include",
                 headers: {
                     "X-School-Id": school.id,
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
+                    enrollmentId: academicData.gradeId ? academicData.enrollmentId : null,
                     studentId: student.id, gradeId: grade, sectionId: section, rollNumber
                 }),
             })
@@ -73,9 +75,9 @@ export const AssignClassForm: React.FC<AssignClassFormProps> = ({
                         <BookOpen className="w-5 h-5" />
                     </div>
                     <div>
-                        <h4 className="text-sm font-bold text-slate-800 mb-1">Class Enrollment</h4>
+                        <h4 className="text-sm font-bold text-slate-800 mb-1">{academicData.gradeId ? "Update Enrollement" : "Enroll Student"}</h4>
                         <p className="text-xs text-slate-500 leading-relaxed">
-                            Assigning <strong>{student.name}</strong> to a specific academic class and section.
+                            {academicData.gradeId ? "Re-Assigning" : "Assigning"} <strong>{student.name}</strong> a specific academic class, section or a roll Number.
                         </p>
                     </div>
                 </div>
@@ -93,7 +95,7 @@ export const AssignClassForm: React.FC<AssignClassFormProps> = ({
                         onChange={(e) => setGrade(e.target.value)}
                         required
                     >
-                        <option value="" disabled>Select Grade</option>
+                        <option value="">Select Grade</option>
                         {schoolData.grades
                             .slice() // prevent redux/state mutation
                             .sort((a, b) => gradeOrderMap[a.grade] - gradeOrderMap[b.grade])
@@ -131,6 +133,8 @@ export const AssignClassForm: React.FC<AssignClassFormProps> = ({
                     value={rollNumber}
                     onChange={(e) => setRollNumber(e.target.value)}
                     icon={<Hash className="w-4 h-4" />}
+                    type="number"
+                    min="1"
                 />
             </div>
 

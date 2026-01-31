@@ -12,9 +12,10 @@ import { UpdateStudentStatusForm } from '../ui/UpdateStudentStatusForm';
 import { StudentDetailView } from '../ui/StudentDetailView';
 import { LoadingScreen } from '../ui/LoadingScreen';
 import { Input } from '../ui/Input';
-import { useAppSelector } from '../../store/hooks';
+import { useAppSelector, useAppDispatch } from '../../store/hooks';
 import { Button } from '../ui/Button';
 import { API_BASE_URL as API, FILE_BASE_URL } from '../config/api';
+import { setSelectedStudent } from '../../store/slices/authSlice';
 
 const getAvatarColor = (name: string) => {
   const colors = [
@@ -71,14 +72,14 @@ export const StudentDirectory: React.FC = () => {
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
   };
-  const { schoolData, school } = useAppSelector((state) => state.auth)
+  const dispatch = useAppDispatch();
+  const { schoolData, school, selectedStudent } = useAppSelector((state) => state.auth)
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Modal & Action State
   const [modalType, setModalType] = useState<ActionType>(null);
-  const [selectedStudent, setSelectedStudent] = useState<any>(null);
 
   // Search State
   const [displayedStudents, setDisplayedStudents] = useState([]);
@@ -98,17 +99,17 @@ export const StudentDirectory: React.FC = () => {
   };
 
   const handleAction = (type: ActionType, student?: any) => {
-    setSelectedStudent(student || null);
+    dispatch(setSelectedStudent({ student, academicData: {} }));
     setModalType(type);
   };
 
   const closeModal = () => {
     setModalType(null);
-    setSelectedStudent(null);
+    dispatch(setSelectedStudent({}));
   };
 
   const handleBackToDetails = () => {
-    if (selectedStudent) {
+    if (selectedStudent.student) {
       setModalType('details');
     } else {
       closeModal();
@@ -117,8 +118,8 @@ export const StudentDirectory: React.FC = () => {
 
   const handleSuccess = (student) => {
     if (['edit', 'status'].includes(modalType || '')) {
+      setModalType('details');
       if (student) {
-        setSelectedStudent(student);
         const students = [];
         displayedStudents.forEach(element => {
           if (element.id == student.id) {
@@ -129,7 +130,6 @@ export const StudentDirectory: React.FC = () => {
         });
         setDisplayedStudents(students);
       }
-      setModalType('details');
       // In a real app, refresh data here
     } else {
       closeModal();
@@ -601,7 +601,7 @@ export const StudentDirectory: React.FC = () => {
       {/* Dynamic Modals based on Action Type */}
 
       {/* 0. Student Detail View */}
-      {modalType === 'details' && selectedStudent && (
+      {modalType === 'details' && selectedStudent.student && (
         <Modal
           isOpen={true}
           onClose={closeModal}
@@ -609,7 +609,6 @@ export const StudentDirectory: React.FC = () => {
           maxWidth="2xl"
         >
           <StudentDetailView
-            student={selectedStudent}
             onClose={closeModal}
             onEdit={() => setModalType('edit')}
             onAssignClass={() => setModalType('class')}
@@ -619,7 +618,7 @@ export const StudentDirectory: React.FC = () => {
       )}
 
       {/* 1. Admission / Edit Details Modal */}
-      {(modalType === 'admission' || modalType === 'edit') && (
+      {(modalType === 'admission' || (modalType === 'edit' && selectedStudent.student)) && (
         <Modal
           isOpen={true}
           onClose={modalType === 'edit' ? handleBackToDetails : closeModal}
@@ -627,14 +626,6 @@ export const StudentDirectory: React.FC = () => {
           maxWidth="4xl"
         >
           <StudentAdmissionForm
-            initialData={selectedStudent ? {
-              name: selectedStudent.name,
-              dateOfBirth: selectedStudent.dateOfBirth,
-              admissionNumber: selectedStudent.admissionNumber,
-              primaryContactName: selectedStudent.primaryContactName,
-              primaryContactPhone: selectedStudent.primaryContactPhone,
-              primaryContactEmail: selectedStudent.primaryContactEmail
-            } : undefined}
             onSuccess={handleSuccess}
             onCancel={modalType === 'edit' ? handleBackToDetails : closeModal}
           />
@@ -642,18 +633,14 @@ export const StudentDirectory: React.FC = () => {
       )}
 
       {/* 2. Assign Class Modal */}
-      {modalType === 'class' && selectedStudent && (
+      {modalType === 'class' && selectedStudent.student && (
         <Modal
           isOpen={true}
           onClose={handleBackToDetails}
-          title="Assign Class & Section"
+          title={`${selectedStudent.academicData.gradeId ? "Re-Assigning" : "Assign"} Class & Section`}
           maxWidth="md"
         >
           <AssignClassForm
-            student={selectedStudent}
-            currentGrade={selectedStudent.grade}
-            currentSection={selectedStudent.section}
-            currentRollNumber={selectedStudent.rollNumber}
             onSuccess={handleSuccess}
             onCancel={handleBackToDetails}
           />
@@ -661,7 +648,7 @@ export const StudentDirectory: React.FC = () => {
       )}
 
       {/* 3. Update Status Modal */}
-      {modalType === 'status' && selectedStudent && (
+      {modalType === 'status' && selectedStudent.student && (
         <Modal
           isOpen={true}
           onClose={handleBackToDetails}
@@ -669,7 +656,6 @@ export const StudentDirectory: React.FC = () => {
           maxWidth="md"
         >
           <UpdateStudentStatusForm
-            student={selectedStudent}
             onSuccess={handleSuccess}
             onCancel={handleBackToDetails}
           />

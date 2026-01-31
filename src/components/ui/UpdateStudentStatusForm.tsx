@@ -3,13 +3,14 @@ import { ShieldAlert, Save, AlertCircle, ChevronDown, FileText } from 'lucide-re
 import { Button } from '../ui/Button';
 import { API_BASE_URL as API } from '../config/api';
 import { notify } from '../../services/utils';
+import { setSelectedStudent } from '../../store/slices/authSlice';
 interface UpdateStudentStatusFormProps {
     studentName: string;
     currentStatus: string;
     onSuccess?: () => void;
     onCancel: () => void;
 }
-import { useAppSelector } from '../../store/hooks';
+import { useAppSelector, useAppDispatch } from '../../store/hooks';
 // Predefined reasons based on status context
 const REASON_OPTIONS = [
     "Academic Performance",
@@ -24,11 +25,12 @@ const REASON_OPTIONS = [
 ];
 
 export const UpdateStudentStatusForm: React.FC<UpdateStudentStatusFormProps> = ({
-    student,
     onSuccess,
     onCancel
 }) => {
-    const { school } = useAppSelector(state => state.auth)
+    const dispatch = useAppDispatch();
+    const { school, selectedStudent } = useAppSelector(state => state.auth)
+    const student = selectedStudent.student;
     const [status, setStatus] = useState(student.status);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
@@ -51,6 +53,7 @@ export const UpdateStudentStatusForm: React.FC<UpdateStudentStatusFormProps> = (
             })
             const res = await req.json();
             if (res.success) {
+                dispatch(setSelectedStudent({ ...selectedStudent, student: res.data }));
                 onSuccess(res.data);
             }
             notify(res.message)
